@@ -4,6 +4,17 @@ NebulousSearch is a small, browser-based mock email-threat dashboard paired with
 
 The application presents a Command Center, Quarantine Vault, and Threat Intel page. Its local mock backend supplies sample messages and deterministic rule-based matching so that tests can verify real UI state changes without connecting to an email account or external service.
 
+## Project Origin
+The idea for NebulousSearch originally started as a Google Apps Script experiment. My personal inbox was experiencing intermittent waves of spam—rolling in and out like the weather. While Gmail’s built-in spam and custom search filters are good, they lacked the aggressive, strict criteria needed to intercept modern phishing campaigns.
+
+Spam bots algorithmically cycle through filter evasion techniques, generating new malicious payloads and sender addresses for every single email. Simply marking a sender as "spam" is ineffective when the next email comes from a newly generated bot address. 
+
+However, I started noticing a pattern: these emails consistently relied on anomalous subject lines and body structures. For example, they would obfuscate flag words by parsing them with multiple periods (e.g., `p.a.y.p.a.l`). That gave me the idea to create a JavaScript function using Regular Expressions (Regex) to block emails containing more than two consecutive periods or words spaced out by punctuation. 
+
+The project spawned from there as a great way to tinker with JavaScript and advanced Regex heuristics. 
+
+**Note on the Automation Suite:** The application housed in this specific repository is a front-end mock designed *solely* to demonstrate my skills in Software Quality Assurance and Cypress test automation. It uses deterministic mock-backend data rather than connecting to a live inbox. This decoupling is necessary due to the severe iframe and API limitations inherent to testing live Google Apps Script environments, which is detailed further below.
+
 ## Purpose and scope
 
 This repository demonstrates how to:
