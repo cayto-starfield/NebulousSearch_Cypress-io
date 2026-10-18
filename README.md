@@ -1,6 +1,6 @@
-# NebulousSearch Cypress Frontend Automation Test Suite
+# NebulousSearch: Cypress Frontend Automation Test Harness
 
-Hello and welcome to the NebulousSearch project! My name is Cayto Nova, 32yr old Sr. Technical QA Analyst with over 10 years of experience, and also the creator of this project. You can learn more about my professional profile at (https://caytonova.work). NebulousSearch is a small, browser-based test email-threat dashboard paired with a Cypress end-to-end testing suite. It is designed as a practical portfolio example of UI automation, quality assurance, basic cybersecurity concepts, and accessibility-minded development.
+Hello and welcome to the NebulousSearch project! My name is Cayto Nova, 32yr old Sr. Technical QA Analyst with over 10 years of experience, and also the creator of this project. You can learn more about my professional profile at (https://caytonova.work). NebulousSearch is a small, browser-based test email-threat dashboard paired with a Cypress end-to-end testing suite. It is designed as a practical portfolio example of UI automation, quality assurance, basic cybersecurity concepts, and accessibility development.
 
 The application presents a Command Center, Quarantine Vault, and Threat Intel page. Its local backend supplies sample messages and deterministic rule-based matching so that tests can verify real UI state changes without connecting to an email account or external service.
 
@@ -26,8 +26,10 @@ This repository demonstrates how to:
 - Cover positive and negative examples, idempotency, whitelist behavior, and untrusted input.
 - Automate selected accessibility checks using axe, keyboard interactions, accessible names, live regions, and responsive viewport assertions.
 - Expose the active Cypress test and step in the test UI while a run is in progress.
-
+  
 This is a demonstration and test harness, not a deployed mail security product. It does not connect to Gmail, scan real mail, provide threat intelligence, establish sender reputation, or guarantee detection of phishing or malware. Filter matches are simple heuristics over test data and should be treated as review signals, not proof of maliciousness.
+
+##*Attention YOU MUST RUN THIS IN THE "ORANGE BARNACLE" CODESPACE 
 
 ## Features
 
