@@ -20,6 +20,8 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (pathname === '/') pathname = '/.github/workflows/Index.html';
+
   const filePath = path.resolve(root, `.${pathname}`);
   if (filePath !== root && !filePath.startsWith(`${root}${path.sep}`)) {
     response.writeHead(403).end('Forbidden');

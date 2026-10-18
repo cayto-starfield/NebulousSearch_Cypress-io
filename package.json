@@ -161,8 +161,9 @@
     "yauzl": "^3.4.0"
   },
 "scripts": {
-    "test": "cypress run",
-    "cy:open": "cypress open",
+    "test": "node scripts/run-cypress.js run",
+    "test:ci": "cypress run",
+    "cy:open": "node scripts/run-cypress.js open",
     "serve": "node scripts/serve.js"
   },
   "bugs": {

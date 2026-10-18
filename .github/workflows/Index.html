@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta charset="UTF-8">
     <base target="_top">
     <title>NebulousSearch Command Center</title>
     <?!= include('Stylesheet'); ?>
@@ -457,26 +458,80 @@
 </style>
 
 <script>
-// At the top of your local JS file
 if (typeof google === 'undefined') {
+  const mockDashboardData = {
+    stats: { total: 42, breakdown: [{ name: 'Dark Matter', count: 42 }] },
+    filters: [],
+    whitelist: []
+  };
+  const mockCyberNews = [
+    {
+      id: 0,
+      title: 'Phantom Payload Campaign Surges',
+      date: 'Oct 18, 2026',
+      summary: 'A new wave of fake Geek Squad invoices is bypassing traditional spam filters.',
+      content: 'Security researchers have identified a massive spike in invoice fraud utilizing PDF attachments and obfuscated sender domains to bypass baseline defenses.',
+      imageUrl: 'https://picsum.photos/seed/cyber1/800/400'
+    },
+    {
+      id: 1,
+      title: 'Zero-Width Character Exploits',
+      date: 'Oct 17, 2026',
+      summary: 'Spammers are sandwiching invisible characters between letters to hide trigger words.',
+      content: "By injecting Unicode zero-width spaces (U+200B) into words like 'P a s s w o r d', attackers are successfully evading standard RegEx scanners.",
+      imageUrl: 'https://picsum.photos/seed/cyber2/800/400'
+    }
+  ];
+  const mockQuarantineData = [
+    {
+      id: 'thread-001',
+      subject: 'ACCOUNT SUSPENDED: Immediate Action Required',
+      sender: 'security@paypaI-alert.com',
+      date: 'Oct 18, 08:15 AM',
+      filterId: 'urgent_phishing',
+      filterName: 'False Gravity (Urgency Scams)',
+      body: 'Your account access has been restricted. Click the secure link below to verify your identity and restore access.'
+    },
+    {
+      id: 'thread-002',
+      subject: 'N.o.r.t.o.n Auto-Renewal Receipt #9982',
+      sender: 'billing@nort0n-secure.net',
+      date: 'Oct 17, 14:30 PM',
+      filterId: 'period_obfuscation',
+      filterName: 'Meteor Shower (Period Obfuscation)',
+      body: 'Thank you for your purchase. You have been billed $399.99 for your annual protection plan. Call us to cancel.'
+    }
+  ];
+  const mockResponses = {
+    getDashboardData: [mockDashboardData, 1000],
+    clearStats: [{ success: true }, 1500],
+    getCyberNews: [mockCyberNews, 1200],
+    getQuarantineData: [mockQuarantineData, 1000],
+    saveFilterSettings: [{ success: true }, 0]
+  };
+
+  function createMockRunner(successHandler, failureHandler) {
+    const runner = {
+      withSuccessHandler(callback) {
+        return createMockRunner(callback, failureHandler);
+      },
+      withFailureHandler(callback) {
+        return createMockRunner(successHandler, callback);
+      }
+    };
+
+    Object.entries(mockResponses).forEach(([method, [result, delay]]) => {
+      runner[method] = () => setTimeout(() => successHandler?.(result), delay);
+    });
+
+    return runner;
+  }
+
   window.google = {
     script: {
       run: {
-        withSuccessHandler: function(callback) {
-          this.callback = callback;
-          return this;
-        },
-        withFailureHandler: function() { return this; },
-        // MOCK BACKEND FUNCTIONS
-        getDashboardData: function() {
-          setTimeout(() => this.callback({
-            stats: { total: 42, breakdown: [{name: 'Dark Matter', count: 42}] },
-            filters: [], whitelist: []
-          }), 1000); // 1-second delay to test the glass spinner
-        },
-        clearStats: function() {
-          setTimeout(() => this.callback({ success: true }), 1500);
-        }
+        withSuccessHandler: callback => createMockRunner(callback),
+        withFailureHandler: callback => createMockRunner(undefined, callback)
       }
     }
   };
