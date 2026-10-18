@@ -2,9 +2,9 @@
 
 ## 1. Product intent
 
-NebulousSearch is a browser-based mock email-threat dashboard and a Cypress end-to-end testing example. It demonstrates practical testing and quality-assurance techniques against a functioning interface, with particular attention to deterministic test data, observable user outcomes, input handling, keyboard operation, and automated accessibility checks.
+NebulousSearch is a browser-based test email-threat dashboard and a Cypress end-to-end testing example. It demonstrates practical testing and quality-assurance techniques against a functioning interface, with particular attention to deterministic test data, observable user outcomes, input handling, keyboard operation, and automated accessibility checks.
 
-The mock is intentionally bounded. It does not access a mailbox, send or receive email, call a threat-intelligence service, verify identities or domains, or claim that a message is safe or malicious. Its rules inspect small sample strings using regular expressions and simple conditions. Results are suitable for test demonstrations only.
+The test is intentionally bounded. It does not access a mailbox, send or receive email, call a threat-intelligence service, verify identities or domains, or claim that a message is safe or malicious. Its rules inspect small sample strings using regular expressions and simple conditions. Results are suitable for test demonstrations only.
 
 ## 2. Requirements and supported execution
 
@@ -26,7 +26,7 @@ The checked-in GitHub Actions workflow uses Node.js 18, 20, and 22. The project 
 | `npm ci` | Installs the exact dependency versions represented by the lockfile. |
 | `npm test` | Starts the progress-enabled local server and opens headed Cypress with the runner UI. It is configured not to exit when the test run finishes, so close the runner to end the process. |
 | `npm run cy:open` | Starts the progress-enabled server and opens Cypress for manually selecting specs. |
-| `npm run serve` | Serves the mock app on port 8080; intended for manual use or a separately launched headless run. |
+| `npm run serve` | Serves the test app on port 8080; intended for manual use or a separately launched headless run. |
 | `npm run test:ci` | Runs Cypress headlessly against `http://localhost:8080`; start `npm run serve` separately first. |
 
 The GitHub Actions workflow starts the port-8080 server, checks its readiness, runs `npm run test:ci` under Xvfb, and cleans up its server process.
@@ -39,10 +39,10 @@ The GitHub Actions workflow starts the port-8080 server, checks its readiness, r
                          | nebulous.cy.js            |
                          +-------------+-------------+
                                        |
-                     visitApp() injects|google mock
+                     visitApp() injects|google test
                                        v
 +------------------------+   callback facade     +-------------------------+
-| Index.html             |<--------------------->| mock-backend.js          |
+| Index.html             |<--------------------->| test-backend.js          |
 | UI, inline CSS/JS      |                        | filters, fixtures, state |
 +------------+-----------+                        +-------------------------+
              |
@@ -64,13 +64,13 @@ The GitHub Actions workflow starts the port-8080 server, checks its readiness, r
 
 ### Components
 
-#### Mock user interface — `.github/workflows/Index.html`
+#### test user interface — `.github/workflows/Index.html`
 
-The single-page interface contains the Command Center, Quarantine Vault, Threat Intel content, cyber-news cards, and email/article dialogs. Its inline browser code loads dashboard/news data, switches tabs, updates the filter settings and whitelist, searches and filters quarantine results, and renders mock scan and purge outcomes. Article text and app state come from local fixtures; the wallpaper and article images use remote image URLs.
+The single-page interface contains the Command Center, Quarantine Vault, Threat Intel content, cyber-news cards, and email/article dialogs. Its inline browser code loads dashboard/news data, switches tabs, updates the filter settings and whitelist, searches and filters quarantine results, and renders test scan and purge outcomes. Article text and app state come from local fixtures; the wallpaper and article images use remote image URLs.
 
-The page loads `scripts/mock-backend.js`. If no `google` object has been provided, it creates a local mock automatically so the page can be opened without a Cypress test harness. The `?e2e=1` query parameter disables progress polling during Cypress runs; the tests inject their own mock service before the page’s scripts execute.
+The page loads `scripts/test-backend.js`. If no `google` object has been provided, it creates a local test automatically so the page can be opened without a Cypress test harness. The `?e2e=1` query parameter disables progress polling during Cypress runs; the tests inject their own test service before the page’s scripts execute.
 
-#### Mock domain/service layer — `scripts/mock-backend.js`
+#### test domain/service layer — `scripts/test-backend.js`
 
 This module is usable in both Node.js and the browser. It exports:
 
@@ -78,15 +78,15 @@ This module is usable in both Node.js and the browser. It exports:
 - The matcher functions used by both unit-level assertions and sample inbox scanning.
 - Seeded quarantine messages (one per filter), a sample inbox of 11 messages, and two article fixtures.
 - A stateful service for reading dashboard/quarantine data, saving active filters and whitelist entries, scanning fixtures, and clearing stats/quarantine.
-- `createGoogleMock(window)`, which supplies a `google.script.run`-shaped chain of success/failure handlers to fit the interface’s callback style.
+- `createGoogletest(window)`, which supplies a `google.script.run`-shaped chain of success/failure handlers to fit the interface’s callback style.
 
-Mock calls are scheduled using the supplied window’s `setTimeout` and use controlled delays for loading and scan flows. This creates visible loading states without external services. Individual tests can create a fresh service to avoid sharing filter and quarantine state.
+test calls are scheduled using the supplied window’s `setTimeout` and use controlled delays for loading and scan flows. This creates visible loading states without external services. Individual tests can create a fresh service to avoid sharing filter and quarantine state.
 
 ### Filter registry
 
-All filters operate on the mock email data; only the fake-invoice matcher inspects subject and body, while the suspicious-sender matcher inspects sender structure. Remaining matchers operate on the subject line.
+All filters operate on the test email data; only the fake-invoice matcher inspects subject and body, while the suspicious-sender matcher inspects sender structure. Remaining matchers operate on the subject line.
 
-| ID | Display name | Current mock detection behavior |
+| ID | Display name | Current test detection behavior |
 | --- | --- | --- |
 | `excessive_spaces` | Asteroid Belt | Matches subjects with two whitespace gaps of at least five characters, or a six-or-more-letter word whose letters are separated by one or two spaces. |
 | `zero_width_chars` | Dark Matter | Matches alphanumeric text interrupted by repeated U+200B–U+200D or U+FEFF characters. |
@@ -102,7 +102,7 @@ These are deliberately small examples rather than robust detection algorithms. F
 
 #### Local HTTP server — `scripts/serve.js`
 
-The server serves repository files and maps `/` to the mock interface. It also hosts `/__test-progress`:
+The server serves repository files and maps `/` to the test interface. It also hosts `/__test-progress`:
 
 - `GET` returns the current progress state and any retained updates after the requested sequence number.
 - `POST` accepts a JSON progress update after validating its status, view, action, string fields, and field lengths.
@@ -123,11 +123,11 @@ The wrapper supports only `open` and `run`. It checks whether the progress API i
 
 ### Browser test setup
 
-The UI spec’s `visitApp()` visits the actual served HTML document and installs `createService().createGoogleMock(win)` in `onBeforeLoad`. The real page event handlers then call the mock’s familiar `google.script.run.withSuccessHandler(...).method(...)` interface. Cypress checks rendered DOM, keyboard behavior, and visible state changes produced by those calls.
+The UI spec’s `visitApp()` visits the actual served HTML document and installs `createService().createGoogletest(win)` in `onBeforeLoad`. The real page event handlers then call the test’s familiar `google.script.run.withSuccessHandler(...).method(...)` interface. Cypress checks rendered DOM, keyboard behavior, and visible state changes produced by those calls.
 
 ### Fixture lifecycle
 
-1. A new mock service begins with nine quarantined messages, one per registered rule.
+1. A new test service begins with nine quarantined messages, one per registered rule.
 2. Tests save the selected filter IDs and normalized whitelist values.
 3. A sample inbox scan examines 11 deterministic messages, skips messages already quarantined, skips whitelisted senders, and applies active matchers.
 4. Newly matched items are appended to quarantine with the matching filter ID and display name.
@@ -143,7 +143,7 @@ The Cypress spec posts status, test title, step, current view, and action to the
 
 The spec contains three kinds of coverage:
 
-1. **Rule/service checks:** Test the mock domain logic and fixture invariants without browser timing.
+1. **Rule/service checks:** Test the test domain logic and fixture invariants without browser timing.
 2. **Browser behavior checks:** Exercise interactions through Cypress and assert the app’s rendered result.
 3. **Cross-cutting quality checks:** Run axe, validate keyboard and reflow behavior, and probe hostile-looking text in user inputs.
 
@@ -151,15 +151,15 @@ Each `it()` case in `.github/workflows/nebulous.cy.js` has an adjacent comment d
 
 | Test area | Coverage |
 | --- | --- |
-| Mock rule/service behavior | Fixture-to-rule consistency; positive and negative examples for all nine matchers; repeated scan idempotency and scan-after-clear behavior. |
+| test rule/service behavior | Fixture-to-rule consistency; positive and negative examples for all nine matchers; repeated scan idempotency and scan-after-clear behavior. |
 | Document and page accessibility | Dashboard, Quarantine Vault, Threat Intel, expanded analytics, email dialog, and news dialog axe scans with `wcag2a`, `wcag2aa`, and `section508` tags; document title/language/headings/landmarks; control names, image alternatives, and future video caption checks. |
 | Keyboard and responsive interaction | Keyboard navigation and activation of tabs, filter chips, checkboxes, analytics expander, and article cards; focus visibility; Escape dialog exit and focus return; vault announcements; 320px reflow and text-spacing overrides at a narrow viewport. |
-| Mock product workflows | All filter cards; every seeded email’s detail dialog; all subject/sender searches, no-match and reset cases; every cyber-news article dialog; saved settings, scan counts, whitelist exclusion, loading, purge, and tab navigation. |
+| test product workflows | All filter cards; every seeded email’s detail dialog; all subject/sender searches, no-match and reset cases; every cyber-news article dialog; saved settings, scan counts, whitelist exclusion, loading, purge, and tab navigation. |
 | Input-safety regression | Markup-shaped input in the whitelist and search remains inert text and does not execute its event handler. |
 
 ### QA principles demonstrated
 
-- **Deterministic setup:** Each browser test gets an isolated in-memory mock service with known fixture state.
+- **Deterministic setup:** Each browser test gets an isolated in-memory test service with known fixture state.
 - **Positive and negative assertions:** Matcher cases include values expected to match and safe/nonmatching examples.
 - **Behavioral assertions:** Tests verify text, counts, open/closed dialogs, selected states, and result lists rather than merely checking that a click did not throw.
 - **Boundary and state-transition coverage:** Tests include no-result search, repeated scans, whitelist skipping, purge/reset behavior, dynamic list creation, and small viewport transitions.
@@ -176,18 +176,20 @@ These tests cannot determine whether screen-reader output is understandable, whe
 
 Security-related tests here are safe input-rendering regression tests. They submit inert, markup-shaped strings and verify that the UI displays text instead of executing the included event handler. This protects those tested rendering paths against the particular regression represented by those payloads; it is not a complete XSS assessment.
 
-The filters are not security controls. They are deterministic examples built around known mock strings and can produce false positives or false negatives. This application does not inspect attachments, parse real email headers, evaluate URLs, authenticate senders, or provide incident response. Do not enter real personal data or connect real accounts to this demonstration.
+The filters are not security controls. They are deterministic examples built around known test strings and can produce false positives or false negatives. This application does not inspect attachments, parse real email headers, evaluate URLs, authenticate senders, or provide incident response. Do not enter real personal data or connect real accounts to this demonstration.
 
 ## 8. Extending the project safely
 
 When adding a filter:
 
-1. Add its stable ID, display name, and short description to the registry in `scripts/mock-backend.js`.
+1. Add its stable ID, display name, and short description to the registry in `scripts/test-backend.js`.
 2. Implement its matcher and include it in the appropriate matching/negative unit examples.
 3. Add a representative initial quarantine item and sample inbox message when appropriate.
 4. Add an informative Threat Intel card with the same `data-filter-id`, describing the actual matcher without promising efficacy.
 5. Keep tests data-driven from the registry where practical, and assert actual UI results for end-to-end behavior.
 6. Re-run accessibility checks on any newly introduced view or dialog state and test keyboard use.
-7. Update this document if the mock architecture, endpoint, runtime requirements, or coverage changes.
+7. Update this document if the test architecture, endpoint, runtime requirements, or coverage changes.
 
 Do not describe a rule as comprehensive, production-ready, or a substitute for layered email security.
+
+
