@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <?!= include('Stylesheet'); ?>
+  </head>
+  <body>
+    <div id="bg-layer"></div>
+    
+    <div class="app-wrapper">
+      
+      <!-- LEFT SIDEBAR: Cyber News Network -->
+      <aside class="sidebar">
+        <!-- New News Overlay -->
+        <div id="news-overlay" class="glass-overlay" style="display:none;"></div>
+        
+        <div class="sidebar-header">
+          <h2>🛰️ AI Cyber News</h2>
+          <p>Daily Threat Intelligence</p>
+        </div>
+        <div id="news-list" class="news-list" style="display:none;"></div>
+      </aside>
+
+      <!-- RIGHT COLUMN: Main App Container -->
+      <main class="container">
+        <header>
+          <div class="logo-area">
+            <span class="icon">✨</span>
+            <h1>NebulousSearch</h1>
+          </div>
+          <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">Command Center</button>
+            <button class="tab-btn" onclick="switchTab('quarantine')">Quarantine Vault</button>
+            <button class="tab-btn" onclick="switchTab('intel')">Threat Intel</button>
+          </div>
+        </header>
+        
+        <!-- Command Center View -->
+        <div id="dashboard-view">
+          <!-- New Dashboard Overlay -->
+          <div id="dashboard-overlay" class="glass-overlay" style="display:none;"></div>
+          
+          <div id="dashboard-content">
+            <div class="stats-card">
+              <!-- New Purge Overlay -->
+              <div id="purge-overlay" class="glass-overlay" style="display:none;"></div>
+              
+              <div class="stats-header" onclick="toggleStats()">
+                <div class="stats-main">
+                  <h2>Anomalies Neutralized</h2>
+                  <div id="total-blocked" class="big-number">0</div>
+                  <span class="subtitle">Since Last Purge</span>
+                </div>
+                <div id="expand-icon" class="expand-icon">▼</div>
+              </div>
+              <div id="stats-container" class="stats-details" style="display:none;">
+                <div id="stats-breakdown"></div>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
+                  <button type="button" id="purge-btn" class="purge-btn" onclick="purgeStats()">Purge Analytics</button>
+                </div>
+              </div>
+            </div>
+
+            <form id="filter-form">
+              <h2 class="section-title">Active Defense Systems</h2>
+              <div id="filter-list"></div>
+              
+              <div class="whitelist-section">
+                <h2 class="section-title">Trusted Comms (Whitelist)</h2>
+                <div class="whitelist-input-group">
+                  <input type="email" id="whitelist-input" placeholder="Enter exact email...">
+                  <button type="button" onclick="addWhitelistItem()" class="secondary-btn">Add Sender</button>
+                </div>
+                <div id="whitelist-tags" style="margin-top: 15px;"></div>
+              </div>
+
+              <div class="actions">
+                <button type="submit" id="save-btn">Initialize Filters</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Quarantine View -->
+        <div id="quarantine-view" style="display:none; min-height: 300px;">
+          <!-- New Quarantine Overlay -->
+          <div id="quarantine-overlay" class="glass-overlay" style="display:none;"></div>
+          
+          <div class="quarantine-header">
+            <input type="text" id="q-search" class="search-box" placeholder="Search sender, subject..." onkeyup="filterQuarantine()">
+            <div id="q-tags" class="tag-bar"></div>
+          </div>
+          <div id="quarantine-list" class="quarantine-list"></div>
+        </div>
+
+        <!-- Threat Intel View -->
+        <div id="intel-view" style="display:none;">
+          <h2 class="section-title" style="margin-top:0;">Know Your Enemy</h2>
+          <!-- Included Intel Cards from previous steps -->
+          <div class="intel-card"><div class="intel-header"><h3>🌑 Dark Matter</h3></div><div class="intel-body"><p>Spammers insert invisible characters...</p><div class="nebulous-box"><strong>✨ The Nebulous Solution:</strong> Looks for alphanumeric interruption.</div></div></div>
+          <div class="intel-card"><div class="intel-header"><h3>☄️ Asteroid Belt</h3></div><div class="intel-body"><p>Spammers break up layout using excessive spaces...</p><div class="nebulous-box"><strong>✨ The Nebulous Solution:</strong> Targets massive structural anomalies.</div></div></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="email-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('email-modal')">&times;</span>
+        <h2 id="modal-subject" style="margin-top:0; color:var(--accent);"></h2>
+        <div class="modal-meta"><strong>From:</strong> <span id="modal-sender"></span><br><strong>Caught By:</strong> <span id="modal-filter" class="tag"></span></div>
+        <div class="modal-warning">⚠️ SECURE TEXT-ONLY VIEW</div>
+        <div id="modal-body" class="safe-body"></div>
+      </div>
+    </div>
+
+    <div id="news-modal" class="modal">
+      <div class="modal-content" style="max-width: 700px; padding: 0;">
+        <span class="close-btn" onclick="closeModal('news-modal')" style="position: absolute; right: 15px; top: 10px; z-index: 10;">&times;</span>
+        <img id="n-img" src="" style="width: 100%; height: 250px; object-fit: cover; border-bottom: 2px solid var(--primary);">
+        <div style="padding: 25px;">
+          <h2 id="n-title" style="margin-top:0; color:var(--accent);"></h2>
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Date: <span id="n-date"></span></div>
+          <div id="n-body" style="font-size: 15px; line-height: 1.6; white-space: pre-wrap;"></div>
+        </div>
+      </div>
+    </div>
+
+    <?!= include('JavaScript'); ?>
+  </body>
+
+<style>
+  :root {
+    --primary: #9d4edd;
+    --accent: #00f5d4;
+    --text: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.75);
+    
+    /* Apple Liquid Glass Variables */
+    --glass-bg: rgba(18, 18, 24, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-hover: rgba(255, 255, 255, 0.08);
+    --glass-blur: blur(24px);
+  }
+
+  body { 
+    /* Apple system font stack */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text); 
+    margin: 0; 
+    padding: 20px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: flex-start;
+    min-height: 100vh; 
+    background-color: #000; /* Fallback */
+  }
+
+  /* The Static Wallpaper Layer */
+  #bg-layer {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: -1;
+    background-size: cover;
+    background-position: center;
+    /* PASTE YOUR DIRECT GOOGLE DRIVE URL HERE */
+    background-image: url('https://lh3.googleusercontent.com/d/1pUAyJKB33U0RxmBNuRSkEh2jCkiG39Ka');
+  }
+
+  .app-wrapper {
+    display: flex;
+    gap: 25px;
+    max-width: 1100px;
+    width: 100%;
+  }
+
+  /* GLASSMORPHISM BASE CLASS */
+  .glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur); /* For Safari */
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 40px);
+    position: sticky;
+    top: 20px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  
+  .sidebar-header h2 { margin: 0; font-size: 18px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px;}
+  .sidebar-header p { margin: 5px 0 0 0; font-size: 12px; color: var(--text-muted); }
+
+  .news-list { overflow-y: auto; flex: 1; padding: 15px; }
+
+  .news-card {
+    background: var(--glass-hover);
+    border: 1px solid var(--glass-border);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .news-card:hover {
+    background: rgba(157, 78, 221, 0.15);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+
+  .n-card-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #fff; line-height: 1.4; }
+  .n-card-summary { font-size: 12px; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* Main Container */
+  .container { 
+    flex: 1; 
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 30px; 
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    height: fit-content; 
+  }
+
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--glass-border); padding-bottom: 20px; }
+  .logo-area { display: flex; align-items: center; gap: 10px; }
+  .logo-area h1 { margin: 0; font-size: 24px; font-weight: 700; background: linear-gradient(90deg, #fff, #a2a2a2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  
+  .tabs { display: flex; gap: 10px; }
+  .tab-btn { 
+    background: transparent; 
+    border: none; 
+    color: var(--text-muted); 
+    padding: 8px 16px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-weight: 500; 
+    transition: all 0.2s; 
+  }
+  .tab-btn:hover { background: var(--glass-hover); color: #fff; }
+  .tab-btn.active { background: rgba(255,255,255,0.1); color: var(--accent); }
+
+  .section-title { font-size: 18px; margin: 0 0 20px 0; font-weight: 600; }
+
+  /* Stats Card */
+  .stats-card { 
+    background: var(--glass-hover); 
+    border: 1px solid var(--glass-border); 
+    border-radius: 12px; 
+    margin-bottom: 30px; 
+    overflow: hidden; 
+  }
+  .stats-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .stats-header h2 { margin: 0 0 5px 0; font-size: 14px; color: var(--text-muted); font-weight: 500;}
+  .big-number { font-size: 36px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .expand-icon { transition: transform 0.3s; color: var(--text-muted); }
+  .expand-icon.open { transform: rotate(180deg); }
+  .stats-details { padding: 0 20px 20px 20px; border-top: 1px solid var(--glass-border); margin-top: 10px; padding-top: 15px; }
+  .breakdown-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+  /* Filters */
+  .filter-card { 
+    display: flex; justify-content: space-between; align-items: center; 
+    background: var(--glass-hover); 
+    padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; 
+    border: 1px solid var(--glass-border); 
+  }
+  .filter-info h3 { margin: 0 0 4px 0; font-size: 15px; font-weight: 600; }
+  .filter-info p { margin: 0; font-size: 13px; color: var(--text-muted); }
+  
+  /* Apple-style Toggle switches */
+  input[type="checkbox"] { 
+    appearance: none; width: 44px; height: 24px; 
+    background: rgba(255,255,255,0.1); border-radius: 12px; position: relative; 
+    cursor: pointer; outline: none; transition: 0.3s;
+    border: 1px solid var(--glass-border);
+  }
+  input[type="checkbox"]::before { 
+    content: ''; position: absolute; width: 18px; height: 18px; 
+    border-radius: 50%; top: 2px; left: 2px; background: #fff; 
+    transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+  input[type="checkbox"]:checked::before { transform: translateX(20px); }
+
+  /* Buttons */
+  .actions { margin-top: 30px; text-align: right; }
+  button[type="submit"], .view-btn { 
+    background: var(--primary); color: #fff; border: none; padding: 12px 24px; 
+    border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; 
+    box-shadow: 0 4px 12px rgba(157, 78, 221, 0.4);
+  }
+  button[type="submit"]:hover, .view-btn:hover { background: #b56df0; transform: translateY(-1px); }
+
+  /* Whitelist */
+  .whitelist-section { margin: 30px 0 20px 0; padding-top: 20px; border-top: 1px solid var(--glass-border); }
+  .whitelist-input-group { display: flex; gap: 10px; }
+  .whitelist-input-group input { 
+    flex-grow: 1; padding: 12px; border-radius: 8px; 
+    border: 1px solid var(--glass-border); 
+    background: rgba(0,0,0,0.2); color: white; font-size: 14px;
+  }
+  .whitelist-input-group input:focus { outline: none; border-color: var(--accent); }
+  .secondary-btn { 
+    background: var(--glass-hover); color: white; border: 1px solid var(--glass-border); 
+    padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; 
+  }
+  .secondary-btn:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); }
+  
+  .w-tag { background: rgba(0, 245, 212, 0.1); border: 1px solid var(--accent); color: var(--accent); padding: 6px 12px; border-radius: 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; margin: 0 8px 8px 0; backdrop-filter: blur(4px); }
+  .w-tag-close { cursor: pointer; font-weight: bold; color: var(--accent); opacity: 0.7; font-size: 16px; }
+  .w-tag-close:hover { opacity: 1; color: #ff4757; }
+
+  /* Quarantine Vault */
+  .quarantine-header { margin-bottom: 20px; }
+  .search-box { 
+    width: 100%; padding: 12px; border-radius: 8px; 
+    border: 1px solid var(--glass-border); 
+    background: rgba(0,0,0,0.2); color: #fff; font-size: 14px; margin-bottom: 15px; 
+  }
+  .tag-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-tag { 
+    background: var(--glass-hover); border: 1px solid var(--glass-border); 
+    color: var(--text-muted); padding: 6px 14px; border-radius: 20px; 
+    font-size: 12px; cursor: pointer; transition: 0.2s; 
+  }
+  .filter-tag.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  .q-item { 
+    background: var(--glass-hover); border: 1px solid var(--glass-border); 
+    padding: 15px; border-radius: 12px; margin-bottom: 10px; 
+    display: flex; justify-content: space-between; align-items: center; 
+  }
+  .q-subject { font-weight: 600; margin-bottom: 4px; font-size: 15px; }
+  .q-sender { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .tag { background: rgba(255, 71, 87, 0.15); color: #ff6b81; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; border: 1px solid rgba(255, 71, 87, 0.3); }
+
+  /* Threat Intel */
+  .intel-card { background: var(--glass-hover); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
+  .intel-header { background: rgba(0,0,0,0.2); padding: 15px 20px; border-bottom: 1px solid var(--glass-border); }
+  .intel-header h3 { margin: 0; font-size: 16px; color: var(--accent); }
+  .intel-body { padding: 20px; font-size: 14px; line-height: 1.6; color: var(--text-muted); }
+  .intel-body strong { color: #fff; }
+  .nebulous-box { margin-top: 15px; background: rgba(0, 245, 212, 0.05); border-left: 3px solid var(--accent); padding: 15px; border-radius: 0 8px 8px 0; color: #d1f2eb; }
+
+  /* Glass Modals */
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center; }
+  .modal-content { 
+    background: rgba(20, 20, 28, 0.85);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 30px; border-radius: 16px; 
+    max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; 
+    box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+  }
+  .close-btn { float: right; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s; line-height: 1;}
+  .close-btn:hover { color: #fff; }
+
+  /* Misc */
+  .loader { text-align: center; padding: 40px; color: var(--text-muted); font-style: italic; }
+  .purge-btn { background: rgba(255, 71, 87, 0.1); color: #ff6b81; border: 1px solid rgba(255, 71, 87, 0.3); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; text-transform: uppercase; transition: 0.2s; }
+  .purge-btn:hover { background: rgba(255, 71, 87, 0.2); border-color: #ff6b81; }
+
+  @media (max-width: 900px) {
+    .app-wrapper { flex-direction: column-reverse; }
+    .sidebar { width: 100%; height: 500px; position: relative; top: 0; }
+  }
+  /* =========================================
+     DYNAMIC LOADING OVERLAYS & ANIMATIONS
+     ========================================= */
+  .glass-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(18, 18, 24, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: inherit; /* Matches the curve of the parent container */
+    transition: opacity 0.4s ease;
+  }
+
+  .glass-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid var(--accent);
+    border-radius: 50%;
+    animation: spin 1s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
+    margin-bottom: 15px;
+    box-shadow: 0 0 15px rgba(0, 245, 212, 0.2);
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .overlay-text {
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  /* The Success Checkmark */
+  .success-mark {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; justify-content: center; align-items: center;
+    color: #121218;
+    font-weight: bold;
+    font-size: 22px;
+    margin-bottom: 15px;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    box-shadow: 0 0 20px rgba(0, 245, 212, 0.4);
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Ensure containers lock the absolute overlay inside them */
+  #dashboard-view, #quarantine-view, .stats-card, .sidebar {
+    position: relative;
+    border-radius: 16px;
+  }
+  .stats-card { border-radius: 12px; } /* Override for the smaller card */
+</style>
+
+<script>
+// At the top of your local JS file
+if (typeof google === 'undefined') {
+  window.google = {
+    script: {
+      run: {
+        withSuccessHandler: function(callback) {
+          this.callback = callback;
+          return this;
+        },
+        withFailureHandler: function() { return this; },
+        // MOCK BACKEND FUNCTIONS
+        getDashboardData: function() {
+          setTimeout(() => this.callback({
+            stats: { total: 42, breakdown: [{name: 'Dark Matter', count: 42}] },
+            filters: [], whitelist: []
+          }), 1000); // 1-second delay to test the glass spinner
+        },
+        clearStats: function() {
+          setTimeout(() => this.callback({ success: true }), 1500);
+        }
+      }
+    }
+  };
+}
+
+  let rawQuarantineData = [];
+  let currentQTag = 'all';
+  let rawNewsData = [];
+  let currentWhitelist = [];
+
+  // --- DYNAMIC WALLPAPER ENGINE ---
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDashboard();
+    loadNews();
+  });
+
+  // --- UI/UX LOADER HELPERS ---
+  function showLoader(overlayId, text) {
+    const overlay = document.getElementById(overlayId);
+    overlay.style.display = 'flex';
+    overlay.style.opacity = '1';
+    overlay.innerHTML = `
+      <div class="glass-spinner"></div>
+      <div class="overlay-text">${text}</div>
+    `;
+  }
+
+  function hideLoaderSuccess(overlayId, successText) {
+    const overlay = document.getElementById(overlayId);
+    // Swap spinner for checkmark
+    overlay.innerHTML = `
+      <div class="success-mark">✓</div>
+      <div class="overlay-text" style="color: var(--accent);">${successText}</div>
+    `;
+    
+    // Hold success mark for 1 second, then fade out
+    setTimeout(() => {
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.style.display = 'none', 400); // Waits for CSS transition
+    }, 1000);
+  }
+
+  // --- TAB NAVIGATION ---
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('dashboard-view').style.display = 'none';
+    document.getElementById('quarantine-view').style.display = 'none';
+    document.getElementById('intel-view').style.display = 'none';
+
+    if (tabName === 'dashboard') {
+      document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+      document.getElementById('dashboard-view').style.display = 'block';
+    } else if (tabName === 'quarantine') {
+      document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+      document.getElementById('quarantine-view').style.display = 'block';
+      if (rawQuarantineData.length === 0) loadQuarantine();
+    } else if (tabName === 'intel') {
+      document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
+      document.getElementById('intel-view').style.display = 'block';
+    }
+  }
+
+  // --- COMMAND CENTER LOGIC ---
+  function loadDashboard() {
+    showLoader('dashboard-overlay', 'Scanning local airspace...');
+    google.script.run.withSuccessHandler(renderDashboard).getDashboardData();
+  }
+
+  function renderDashboard(data) {
+    document.getElementById('total-blocked').textContent = data.stats.total;
+    const bdContainer = document.getElementById('stats-breakdown');
+    bdContainer.innerHTML = '';
+    data.stats.breakdown.forEach(item => {
+      bdContainer.innerHTML += `<div class="breakdown-row"><span class="b-name">${item.name}</span><span class="b-count">${item.count}</span></div>`;
+    });
+
+    const filterList = document.getElementById('filter-list');
+    const tagBar = document.getElementById('q-tags');
+    filterList.innerHTML = '';
+    tagBar.innerHTML = `<button class="filter-tag active" data-filter="all" onclick="setQFilter('all')">All Anomalies</button>`;
+
+    data.filters.forEach(filter => {
+      filterList.innerHTML += `
+        <div class="filter-card">
+          <div class="filter-info"><h3>${filter.name}</h3><p>${filter.description}</p></div>
+          <div class="filter-toggle"><input type="checkbox" value="${filter.id}" ${filter.isActive ? 'checked' : ''}></div>
+        </div>`;
+      tagBar.innerHTML += `<button class="filter-tag" data-filter="${filter.id}" onclick="setQFilter('${filter.id}')">${filter.name.split(' ')[0]}...</button>`;
+    });
+
+    currentWhitelist = data.whitelist || [];
+    renderWhitelistTags();
+    
+    // Trigger the success animation and fade
+    hideLoaderSuccess('dashboard-overlay', 'Airspace Secured');
+  }
+
+  function toggleStats() {
+    const details = document.getElementById('stats-container');
+    const icon = document.getElementById('expand-icon');
+    details.style.display = details.style.display === 'none' ? 'block' : 'none';
+    icon.classList.toggle('open');
+  }
+
+  // --- PURGE LOGIC ---
+  function purgeStats() {
+    if (!confirm("Are you sure you want to purge all anomaly logs? This will reset your counters to zero.")) return;
+    
+    document.getElementById('purge-btn').disabled = true;
+    showLoader('purge-overlay', 'Purging anomaly cache...');
+
+    google.script.run.withSuccessHandler(res => {
+      document.getElementById('purge-btn').disabled = false;
+      if (!res.success) {
+        alert("Server Error: " + res.message);
+        document.getElementById('purge-overlay').style.display = 'none';
+        return;
+      }
+      
+      // Fast UI reset without reloading the whole page
+      document.getElementById('total-blocked').textContent = '0';
+      document.querySelectorAll('.b-count').forEach(el => el.textContent = '0');
+      rawQuarantineData = [];
+      document.getElementById('quarantine-list').innerHTML = '<p style="color:#888; text-align:center;">Vault scrubbed. No anomalies found.</p>';
+      
+      hideLoaderSuccess('purge-overlay', 'Purge Complete');
+    }).clearStats();
+  }
+
+  // --- QUARANTINE VAULT LOGIC ---
+  function loadQuarantine() {
+    showLoader('quarantine-overlay', 'Accessing secure vault...');
+    google.script.run.withSuccessHandler(data => {
+      rawQuarantineData = data;
+      filterQuarantine();
+      hideLoaderSuccess('quarantine-overlay', 'Access Granted');
+    }).getQuarantineData();
+  }
+
+  function setQFilter(filterId) {
+    currentQTag = filterId;
+    document.querySelectorAll('.filter-tag').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.filter-tag[data-filter="${filterId}"]`).classList.add('active');
+    filterQuarantine();
+  }
+
+  function filterQuarantine() {
+    const query = document.getElementById('q-search').value.toLowerCase();
+    const list = document.getElementById('quarantine-list');
+    list.innerHTML = '';
+
+    const filtered = rawQuarantineData.filter(item => {
+      return (item.subject.toLowerCase().includes(query) || item.sender.toLowerCase().includes(query)) && 
+             (currentQTag === 'all' || item.filterId === currentQTag);
+    });
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<p style="color:#888; text-align:center;">No anomalies found.</p>';
+      return;
+    }
+
+    filtered.forEach((item) => {
+      const globalIndex = rawQuarantineData.indexOf(item); 
+      list.innerHTML += `
+        <div class="q-item">
+          <div class="q-details">
+            <div class="q-subject">${escapeHTML(item.subject)}</div>
+            <div class="q-sender">${escapeHTML(item.sender)} • ${item.date}</div>
+            <span class="tag">${item.filterName}</span>
+          </div>
+          <button class="view-btn" onclick="openEmailModal(${globalIndex})">Inspect</button>
+        </div>`;
+    });
+  }
+
+  // --- CYBER NEWS LOGIC ---
+  function loadNews() {
+    showLoader('news-overlay', 'Decrypting intelligence...');
+    google.script.run.withSuccessHandler(renderNews).getCyberNews();
+  }
+
+  function renderNews(data) {
+    rawNewsData = data;
+    const newsList = document.getElementById('news-list');
+    newsList.style.display = 'block';
+    newsList.innerHTML = '';
+
+    data.forEach((article, index) => {
+      newsList.innerHTML += `
+        <div class="news-card" onclick="openNewsModal(${index})">
+          <div class="n-card-title">${escapeHTML(article.title)}</div>
+          <div class="n-card-summary">${escapeHTML(article.summary)}</div>
+        </div>`;
+    });
+    
+    hideLoaderSuccess('news-overlay', 'Link Established');
+  }
+
+  // --- WHITELIST LOGIC ---
+  function renderWhitelistTags() {
+    const container = document.getElementById('whitelist-tags');
+    container.innerHTML = '';
+    currentWhitelist.forEach((email, index) => {
+      container.innerHTML += `<div class="w-tag">${escapeHTML(email)}<span class="w-tag-close" onclick="removeWhitelistItem(${index})">&times;</span></div>`;
+    });
+  }
+  function addWhitelistItem() {
+    const email = document.getElementById('whitelist-input').value.trim().toLowerCase();
+    if(email === '' || !email.includes('@') || !email.includes('.')) return alert("Enter a valid email.");
+    if(!currentWhitelist.includes(email)) { currentWhitelist.push(email); renderWhitelistTags(); }
+    document.getElementById('whitelist-input').value = '';
+  }
+  function removeWhitelistItem(index) { currentWhitelist.splice(index, 1); renderWhitelistTags(); }
+
+  document.getElementById('filter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true; btn.textContent = 'Calibrating...';
+    
+    const activeIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    google.script.run.withSuccessHandler(res => {
+      btn.disabled = false; btn.textContent = 'Initialize Filters';
+    }).saveFilterSettings(activeIds, currentWhitelist);
+  });
+
+  // --- SAFE MODALS LOGIC ---
+  function openEmailModal(index) {
+    const item = rawQuarantineData[index];
+    document.getElementById('modal-subject').textContent = item.subject;
+    document.getElementById('modal-sender').textContent = item.sender;
+    document.getElementById('modal-filter').textContent = item.filterName;
+    document.getElementById('modal-body').textContent = item.body; 
+    document.getElementById('email-modal').style.display = 'flex';
+  }
+  function openNewsModal(index) {
+    const article = rawNewsData[index];
+    document.getElementById('n-img').src = article.imageUrl;
+    document.getElementById('n-title').textContent = article.title;
+    document.getElementById('n-date').textContent = article.date;
+    document.getElementById('n-body').textContent = article.content;
+    document.getElementById('news-modal').style.display = 'flex';
+  }
+  function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+  function escapeHTML(str) { return str ? str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag])) : ''; }
+</script>
+
+</html>
