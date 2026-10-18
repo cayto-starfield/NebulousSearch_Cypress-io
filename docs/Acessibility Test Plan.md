@@ -9,7 +9,7 @@
 To achieve and verify 100% Section 508 and WCAG 2.1 AA compliance for the NebulousSearch Mock App by utilizing the DHS Trusted Tester v5.0 methodology. This strategy integrates automated continuous integration testing with comprehensive manual inspection to identify and eliminate accessibility barriers.
 
 ### 1.2 Scope
-The scope of this test plan covers all user-facing interfaces of the NebulousSearch single-page mock UI, including the Command Center, Quarantine Vault, Threat Intel, Cyber News cards, and all modal dialogs. Data backend logic is mocked and out of scope for accessibility.
+The scope of this test plan covers all user-facing interfaces of the NebulousSearch single-page test UI, including the Command Center, Quarantine Vault, Threat Intel, Cyber News cards, and all modal dialogs. Data backend logic is mocked and out of scope for accessibility.
 
 ### 1.3 Methodology & Tools
 Testing will strictly adhere to the Federal CIO Council Accessibility Community of Practice (ACOP) Trusted Tester Test Process v5.0. 
