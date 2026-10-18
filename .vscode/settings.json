@@ -1,0 +1,10 @@
+{
+  "remote.autoForwardPorts": true,
+  "remote.portsAttributes": {
+    "8081": {
+      "label": "NebulousSearch Mock App",
+      "onAutoForward": "openBrowser",
+      "protocol": "http"
+    }
+  }
+}

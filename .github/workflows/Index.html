@@ -35,11 +35,13 @@
             <span class="icon">✨</span>
             <h1>NebulousSearch</h1>
           </div>
-          <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('dashboard')">Command Center</button>
-            <button class="tab-btn" onclick="switchTab('quarantine')">Quarantine Vault</button>
-            <button class="tab-btn" onclick="switchTab('intel')">Threat Intel</button>
-          </div>
+          <nav aria-label="Main navigation">
+            <div class="tabs">
+              <button class="tab-btn active" aria-current="page" onclick="switchTab('dashboard')">Command Center</button>
+              <button class="tab-btn" onclick="switchTab('quarantine')">Quarantine Vault</button>
+              <button class="tab-btn" onclick="switchTab('intel')">Threat Intel</button>
+            </div>
+          </nav>
         </header>
         
         <!-- Command Center View -->
@@ -96,10 +98,10 @@
           <div id="quarantine-overlay" class="glass-overlay" style="display:none;"></div>
           
           <div class="quarantine-header">
-            <input type="text" id="q-search" class="search-box" placeholder="Search sender, subject..." onkeyup="filterQuarantine()">
+            <input type="search" id="q-search" class="search-box" aria-label="Search quarantined emails by sender or subject" placeholder="Search sender, subject..." oninput="filterQuarantine()">
             <div id="q-tags" class="tag-bar"></div>
           </div>
-          <div id="quarantine-list" class="quarantine-list"></div>
+          <div id="quarantine-list" class="quarantine-list" role="region" aria-label="Quarantine search results" aria-live="polite" aria-atomic="true"></div>
         </div>
 
         <!-- Threat Intel View -->
@@ -126,7 +128,7 @@
     <div id="news-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="n-title">
       <div class="modal-content" tabindex="-1" style="max-width: 700px; padding: 0;">
         <button type="button" class="close-btn" aria-label="Close threat article" onclick="closeModal('news-modal')" style="position: absolute; right: 15px; top: 10px; z-index: 10;">&times;</button>
-        <img id="n-img" src="" style="width: 100%; height: 250px; object-fit: cover; border-bottom: 2px solid var(--primary);">
+        <img id="n-img" src="" alt="" style="width: 100%; height: 250px; object-fit: cover; border-bottom: 2px solid var(--primary);">
         <div style="padding: 25px;">
           <h2 id="n-title" style="margin-top:0; color:var(--accent);"></h2>
           <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Date: <span id="n-date"></span></div>
@@ -220,6 +222,8 @@
   .news-list { overflow-y: auto; flex: 1; padding: 15px; }
 
   .news-card {
+    display: block;
+    width: 100%;
     background: var(--glass-hover);
     border: 1px solid var(--glass-border);
     padding: 15px;
@@ -227,6 +231,9 @@
     margin-bottom: 15px;
     cursor: pointer;
     transition: all 0.3s ease;
+    color: inherit;
+    font: inherit;
+    text-align: left;
   }
 
   .news-card:hover {
@@ -312,6 +319,10 @@
   }
   input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
   input[type="checkbox"]:checked::before { transform: translateX(20px); }
+  .filter-toggle input:focus-visible, .whitelist-input-group input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
 
   /* Buttons */
   .actions { margin-top: 30px; text-align: right; }
@@ -328,9 +339,13 @@
   .whitelist-input-group input { 
     flex-grow: 1; padding: 12px; border-radius: 8px; 
     border: 1px solid var(--glass-border); 
-    background: rgba(0,0,0,0.2); color: white; font-size: 14px;
+    background: rgba(0,0,0,0.2); color: white; font-size: 14px; min-width: 0; box-sizing: border-box;
   }
   .whitelist-input-group input:focus { outline: none; border-color: var(--accent); }
+  .whitelist-input-group input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
   .secondary-btn { 
     background: var(--glass-hover); color: white; border: 1px solid var(--glass-border); 
     padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; 
@@ -346,7 +361,7 @@
   .search-box { 
     width: 100%; padding: 12px; border-radius: 8px; 
     border: 1px solid var(--glass-border); 
-    background: rgba(0,0,0,0.2); color: #fff; font-size: 14px; margin-bottom: 15px; 
+    background: rgba(0,0,0,0.2); color: #fff; font-size: 14px; margin-bottom: 15px; box-sizing: border-box;
   }
   .tag-bar { display: flex; gap: 8px; flex-wrap: wrap; }
   .filter-tag { 
@@ -394,7 +409,13 @@
 
   @media (max-width: 900px) {
     .app-wrapper { flex-direction: column-reverse; }
-    .sidebar { width: 100%; height: 500px; position: relative; top: 0; }
+    .sidebar, .container { box-sizing: border-box; width: 100%; min-width: 0; }
+    .sidebar { height: 500px; position: relative; top: 0; }
+    .container { padding: 20px; }
+    header { flex-direction: column; align-items: stretch; gap: 16px; }
+    .tabs { flex-wrap: wrap; }
+    .q-item { min-width: 0; }
+    .q-details { min-width: 0; overflow-wrap: anywhere; }
   }
   /* =========================================
      DYNAMIC LOADING OVERLAYS & ANIMATIONS
@@ -505,7 +526,7 @@ if (typeof google === 'undefined') {
     loadNews();
     if (!new URLSearchParams(window.location.search).has('e2e')) {
       pollTestProgress();
-      setInterval(pollTestProgress, 500);
+      setInterval(pollTestProgress, 200);
     }
   });
 
@@ -537,49 +558,79 @@ if (typeof google === 'undefined') {
 
   // --- TAB NAVIGATION ---
   function switchTab(tabName) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(button => {
+      button.classList.remove('active');
+      button.removeAttribute('aria-current');
+    });
     document.getElementById('dashboard-view').style.display = 'none';
     document.getElementById('quarantine-view').style.display = 'none';
     document.getElementById('intel-view').style.display = 'none';
 
     if (tabName === 'dashboard') {
       document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+      document.querySelector('.tab-btn:nth-child(1)').setAttribute('aria-current', 'page');
       document.getElementById('dashboard-view').style.display = 'block';
     } else if (tabName === 'quarantine') {
       document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+      document.querySelector('.tab-btn:nth-child(2)').setAttribute('aria-current', 'page');
       document.getElementById('quarantine-view').style.display = 'block';
       if (rawQuarantineData.length === 0) loadQuarantine();
     } else if (tabName === 'intel') {
       document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
+      document.querySelector('.tab-btn:nth-child(3)').setAttribute('aria-current', 'page');
       document.getElementById('intel-view').style.display = 'block';
     }
   }
 
   let lastTestProgressSequence = 0;
+  let lastReceivedTestProgressSequence = 0;
+  let pendingTestProgress = [];
   let progressApiWarningShown = false;
+  let progressPollInFlight = false;
 
-  async function requestTestProgress(url) {
-    const response = await fetch(url, { cache: 'no-store' });
+  async function requestTestProgress(url, after) {
+    const separator = url.includes('?') ? '&' : '?';
+    const progressUrl = `${url}${separator}after=${after}`;
+    const response = await fetch(progressUrl, { cache: 'no-store' });
     if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) return null;
     return response.json();
   }
 
   async function pollTestProgress() {
-    let progress = null;
+    if (progressPollInFlight) return;
+    progressPollInFlight = true;
     try {
-      progress = await requestTestProgress('/__test-progress');
+      let progress = await requestTestProgress('/__test-progress', lastReceivedTestProgressSequence);
       if (!progress && window.location.port !== '8081') {
-        progress = await requestTestProgress(`${window.location.protocol}//${window.location.hostname}:8081/__test-progress`);
+        progress = await requestTestProgress(
+          `${window.location.protocol}//${window.location.hostname}:8081/__test-progress`,
+          lastReceivedTestProgressSequence
+        );
       }
+      if (progress) {
+        const updates = Array.isArray(progress.updates) ? progress.updates : [progress];
+        updates.forEach(update => {
+          if (update.sequence > lastReceivedTestProgressSequence) {
+            pendingTestProgress.push(update);
+            lastReceivedTestProgressSequence = update.sequence;
+          }
+        });
+      }
+
+      const nextProgress = pendingTestProgress.shift();
+      if (nextProgress) renderTestProgress(nextProgress);
     } catch (error) {
       if (!progressApiWarningShown) {
         console.warn('Live test progress is unavailable. Start the suite with npm test to enable it.', error);
         progressApiWarningShown = true;
       }
-      return;
+    } finally {
+      progressPollInFlight = false;
     }
+  }
 
-    if (!progress || progress.sequence === lastTestProgressSequence) return;
+  function renderTestProgress(progress) {
+    if (!progress || progress.sequence <= lastTestProgressSequence) return;
     lastTestProgressSequence = progress.sequence;
 
     const panel = document.getElementById('test-run-status');
@@ -636,7 +687,7 @@ if (typeof google === 'undefined') {
     const filterList = document.getElementById('filter-list');
     const tagBar = document.getElementById('q-tags');
     filterList.innerHTML = '';
-    tagBar.innerHTML = `<button class="filter-tag active" data-filter="all" onclick="setQFilter('all')">All Anomalies</button>`;
+    tagBar.innerHTML = `<button type="button" class="filter-tag active" data-filter="all" aria-pressed="true" onclick="setQFilter('all')">All Anomalies</button>`;
 
     data.filters.forEach(filter => {
       filterList.innerHTML += `
@@ -644,7 +695,7 @@ if (typeof google === 'undefined') {
           <div class="filter-info"><h3>${filter.name}</h3><p>${filter.description}</p></div>
           <div class="filter-toggle"><input type="checkbox" id="filter-${filter.id}" value="${filter.id}" aria-label="Enable ${escapeHTML(filter.name)} filter" ${filter.isActive ? 'checked' : ''}></div>
         </div>`;
-      tagBar.innerHTML += `<button class="filter-tag" data-filter="${filter.id}" onclick="setQFilter('${filter.id}')">${filter.name.split(' ')[0]}...</button>`;
+      tagBar.innerHTML += `<button type="button" class="filter-tag" data-filter="${filter.id}" aria-label="Filter by ${escapeHTML(filter.name)}" aria-pressed="false" onclick="setQFilter('${filter.id}')">${filter.name.split(' ')[0]}...</button>`;
     });
 
     currentWhitelist = data.whitelist || [];
@@ -732,8 +783,11 @@ if (typeof google === 'undefined') {
 
   function setQFilter(filterId) {
     currentQTag = filterId;
-    document.querySelectorAll('.filter-tag').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.filter-tag[data-filter="${filterId}"]`).classList.add('active');
+    document.querySelectorAll('.filter-tag').forEach(button => {
+      const isSelected = button.dataset.filter === filterId;
+      button.classList.toggle('active', isSelected);
+      button.setAttribute('aria-pressed', String(isSelected));
+    });
     filterQuarantine();
   }
 
@@ -780,10 +834,10 @@ if (typeof google === 'undefined') {
 
     data.forEach((article, index) => {
       newsList.innerHTML += `
-        <div class="news-card" onclick="openNewsModal(${index})">
+        <button type="button" class="news-card" aria-label="Read article: ${escapeHTML(article.title)}" onclick="openNewsModal(${index})">
           <div class="n-card-title">${escapeHTML(article.title)}</div>
           <div class="n-card-summary">${escapeHTML(article.summary)}</div>
-        </div>`;
+        </button>`;
     });
     
     hideLoaderSuccess('news-overlay', 'Link Established');
@@ -831,6 +885,7 @@ if (typeof google === 'undefined') {
   function openNewsModal(index) {
     const article = rawNewsData[index];
     document.getElementById('n-img').src = article.imageUrl;
+    document.getElementById('n-img').alt = `Article image: ${article.title}`;
     document.getElementById('n-title').textContent = article.title;
     document.getElementById('n-date').textContent = article.date;
     document.getElementById('n-body').textContent = article.content;

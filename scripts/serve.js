@@ -11,6 +11,7 @@ let testProgress = {
   action: 'none',
   sequence: 0
 };
+const testProgressHistory = [];
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
@@ -41,8 +42,16 @@ const server = http.createServer((request, response) => {
     }
 
     if (request.method === 'GET') {
+      const after = Number(new URL(request.url, 'http://localhost').searchParams.get('after') || 0);
+      if (!Number.isSafeInteger(after) || after < 0) {
+        response.writeHead(400).end('Invalid progress sequence');
+        return;
+      }
       response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      response.end(JSON.stringify(testProgress));
+      response.end(JSON.stringify({
+        ...testProgress,
+        updates: testProgressHistory.filter(update => update.sequence > after)
+      }));
       return;
     }
 
@@ -86,6 +95,8 @@ const server = http.createServer((request, response) => {
       }
 
       testProgress = { ...update, sequence: testProgress.sequence + 1 };
+      testProgressHistory.push(testProgress);
+      if (testProgressHistory.length > 200) testProgressHistory.shift();
       response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       response.end(JSON.stringify(testProgress));
     });

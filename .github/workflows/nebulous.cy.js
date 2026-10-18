@@ -51,6 +51,19 @@ after(() => {
 });
 
 describe('Mock filter rules', () => {
+  it('seeds one matching vault email for every filter', () => {
+    const service = createService();
+    const emails = service.getQuarantineData();
+
+    expect(emails).to.have.length(service.filters.length);
+    expect(new Set(emails.map(email => email.filterId))).to.deep.equal(
+      new Set(service.filters.map(filter => filter.id))
+    );
+    emails.forEach(email => {
+      expect(filterLogic[email.filterId](email.subject, email.body, email.sender)).to.equal(true);
+    });
+  });
+
   it('matches the supplied filter patterns and leaves safe samples alone', () => {
     reportTestProgress({
       status: 'running',
@@ -87,12 +100,12 @@ describe('Mock filter rules', () => {
     expect(service.scanMockInbox()).to.deep.equal({
       scannedCount: 11,
       quarantinedCount: 9,
-      totalQuarantined: 11
+      totalQuarantined: 18
     });
     expect(service.scanMockInbox()).to.deep.equal({
       scannedCount: 11,
       quarantinedCount: 0,
-      totalQuarantined: 11
+      totalQuarantined: 18
     });
 
     service.clearStats();
@@ -128,6 +141,20 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     });
   });
 
+  it('exposes required document language, title, landmarks, and heading structure', () => {
+    cy.document().should(document => {
+      expect(document.documentElement).to.have.attr('lang').and.not.be.empty;
+      expect(document.title).to.equal('NebulousSearch Command Center');
+      expect(document.querySelectorAll('h1')).to.have.length(1);
+      expect(document.querySelector('main')).to.exist;
+      expect(document.querySelector('nav[aria-label="Main navigation"]')).to.exist;
+    });
+
+    cy.checkA11y(null, {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'section508'] }
+    });
+  });
+
   it('Passes accessibility checks after opening the Quarantine Vault', () => {
     reportTestProgress({
       step: 'Opening the Quarantine Vault',
@@ -136,16 +163,107 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     cy.contains('.tab-btn', 'Quarantine Vault').click();
     cy.get('#quarantine-view').should('be.visible');
     cy.get('#quarantine-overlay .overlay-text', { timeout: 3000 }).should('have.text', 'Access Granted');
-    cy.get('#quarantine-list .q-item').should('have.length', 2);
+    cy.get('#quarantine-list .q-item').should('have.length', createService().filters.length);
 
     reportTestProgress({ step: 'Running accessibility scan on quarantine results' });
     cy.checkA11y('#quarantine-view', {
       runOnly: {
         type: 'tag',
-        values: ['section508', 'best-practice']
+        values: ['wcag2a', 'wcag2aa', 'section508']
       }
     });
   });
+
+  it('keeps navigation, filter controls, and search operable from the keyboard', () => {
+    cy.get('.tab-btn').first().focus();
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.focused().should('have.text', 'Quarantine Vault').type('{enter}');
+    cy.get('#quarantine-view').should('be.visible');
+    cy.get('.tab-btn[aria-current="page"]').should('have.text', 'Quarantine Vault');
+
+    cy.get('#q-search').focus().type('billing@');
+    cy.focused().should('have.attr', 'aria-label', 'Search quarantined emails by sender or subject');
+    cy.get('#q-search').should($search => {
+      expect(getComputedStyle($search[0]).outlineWidth).to.equal('2px');
+    });
+    cy.get('#quarantine-list .q-item').should('have.length.greaterThan', 0);
+    cy.get('#quarantine-list').should('have.attr', 'aria-live', 'polite');
+    cy.checkA11y('#quarantine-view', {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'section508'] }
+    });
+
+    cy.get('#q-search').clear();
+    cy.get('.filter-tag[data-filter="all"]').should('have.attr', 'aria-pressed', 'true');
+    cy.get('.filter-tag[data-filter="urgent_phishing"]')
+      .should('have.attr', 'aria-label', 'Filter by False Gravity')
+      .focus()
+      .type('{enter}')
+      .should('have.attr', 'aria-pressed', 'true');
+    cy.get('.filter-tag[data-filter="all"]').should('have.attr', 'aria-pressed', 'false');
+    cy.get('#quarantine-list .q-item').should('have.length', 1);
+    cy.checkA11y('#quarantine-view', {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'section508'] }
+    });
+    cy.get('.filter-tag[data-filter="all"]').focus().type('{enter}');
+
+    cy.get('.tab-btn').first().focus().type('{enter}');
+    cy.get('#dashboard-view').should('be.visible');
+    cy.get('#filter-list input[type="checkbox"]').first().focus().type(' ');
+    cy.get('#filter-list input[type="checkbox"]').first().should('be.checked');
+    cy.get('#filter-list input[type="checkbox"]').first().should($checkbox => {
+      expect(getComputedStyle($checkbox[0]).outlineWidth).to.equal('2px');
+    });
+    cy.get('#whitelist-input').focus().type('focus@example.com');
+    cy.get('#whitelist-input').should($input => {
+      expect(getComputedStyle($input[0]).outlineWidth).to.equal('2px');
+    });
+  });
+
+  it('makes every cyber news card keyboard accessible and its modal Section 508 conformant', () => {
+    cy.get('#news-overlay .overlay-text', { timeout: 3000 }).should('have.text', 'Link Established');
+    cy.get('#news-list .news-card').first().focus().should('have.focus').type('{enter}');
+    cy.get('#news-modal').should('be.visible');
+    cy.get('#news-modal .close-btn').should('have.focus');
+    cy.get('#n-img').should('have.attr', 'alt').and('not.be.empty');
+
+    cy.checkA11y('#news-modal', {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'section508'] }
+    });
+
+    cy.get('body').type('{esc}');
+    cy.get('#news-modal').should('not.be.visible');
+    cy.get('#news-list .news-card').first().should('have.focus');
+  });
+
+  it('provides accessible names, state, and keyboard operation for filter controls', () => {
+    const checkboxes = createService().filters;
+    cy.get('#filter-list input[type="checkbox"]').should('have.length', checkboxes.length).each(($checkbox, index) => {
+      cy.wrap($checkbox).should('have.attr', 'aria-label', `Enable ${checkboxes[index].name} filter`);
+    });
+
+    cy.get('.stats-header')
+      .should('have.attr', 'aria-expanded', 'false')
+      .focus()
+      .type(' ')
+      .should('have.attr', 'aria-expanded', 'true');
+    cy.get('#stats-container').should('have.attr', 'aria-hidden', 'false');
+  });
+
+  it('reflows the interface at a narrow viewport without horizontal scrolling', () => {
+    cy.viewport(320, 720);
+    cy.document().should(document => {
+      expect(document.documentElement.scrollWidth).to.be.at.most(document.documentElement.clientWidth);
+    });
+
+    cy.get('.tab-btn').contains('Quarantine Vault').focus().type('{enter}');
+    cy.get('#quarantine-view').should('be.visible');
+    cy.get('#q-search').type('billing@');
+    cy.get('#quarantine-list .q-item').should('have.length.greaterThan', 0);
+    cy.document().should(document => {
+      expect(document.documentElement.scrollWidth).to.be.at.most(document.documentElement.clientWidth);
+    });
+  });
+
   //Keyboard Navigation & Focus State Testing
   // Users with motor disabilities rely entirely on the Tab and Enter keys.
   // You must verify that hidden elements become visible when activated by a keyboard, not just a mouse click.
@@ -162,7 +280,9 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     cy.get('#stats-container').should('be.visible');
 
     // Scan the newly revealed content
-    cy.checkA11y('#stats-container', { runOnly: { type: 'tag', values: ['wcag2aa'] } });
+    cy.checkA11y('#stats-container', {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'section508'] }
+    });
   });
 
 //Modal Accessibility (Focus Management & Esc Key)
@@ -178,6 +298,9 @@ it('Manages focus and allows keyboard exit for the Email Inspector Modal', () =>
 
     reportTestProgress({ step: 'Scanning Modal DOM structure' });
     cy.checkA11y('#email-modal');
+    cy.checkA11y('#email-modal', {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'section508'] }
+    });
 
     reportTestProgress({ step: 'Testing Escape key closure' });
     // Simulate pressing the Escape key globally
@@ -188,6 +311,85 @@ it('Manages focus and allows keyboard exit for the Email Inspector Modal', () =>
 
     // Best Practice Check: Did focus return to the button that opened it?
     cy.get('.view-btn').first().should('have.focus');
+  });
+
+  it('opens the matching email modal for every quarantine entry', () => {
+    const emails = createService().getQuarantineData();
+
+    reportTestProgress({ step: 'Opening and verifying each quarantined email', view: 'quarantine' });
+    cy.contains('.tab-btn', 'Quarantine Vault').click();
+    cy.get('#quarantine-overlay .overlay-text', { timeout: 3000 }).should('have.text', 'Access Granted');
+    cy.get('#quarantine-list .q-item').should('have.length', emails.length).each(($item, index) => {
+      const email = emails[index];
+      cy.wrap($item).find('.view-btn').focus().type('{enter}');
+      cy.get('#email-modal').should('be.visible');
+      cy.get('#modal-subject').should('have.text', email.subject);
+      cy.get('#modal-sender').should('have.text', email.sender);
+      cy.get('#modal-filter').should('have.text', email.filterName);
+      cy.get('#modal-body').should('have.text', email.body);
+      cy.get('#email-modal .close-btn').click();
+      cy.get('#email-modal').should('not.be.visible');
+    });
+  });
+
+  it('searches the vault by every seeded email subject and sender', () => {
+    const emails = createService().getQuarantineData();
+
+    reportTestProgress({ step: 'Searching the vault for each filter sample', view: 'quarantine' });
+    cy.contains('.tab-btn', 'Quarantine Vault').click();
+    cy.get('#quarantine-overlay .overlay-text', { timeout: 3000 }).should('have.text', 'Access Granted');
+    cy.get('#quarantine-list .q-item').should('have.length', emails.length);
+
+    emails.forEach(email => {
+      cy.get('#q-search').clear().invoke('val', email.subject).trigger('input');
+      cy.get('#quarantine-list .q-item').should('have.length', 1);
+      cy.get('#quarantine-list .q-subject').should('have.text', email.subject);
+      cy.get('#quarantine-list .q-sender').should('contain.text', email.sender);
+
+      cy.get('#q-search').clear().type(email.sender);
+      cy.get('#quarantine-list .q-item').should('have.length', 1);
+      cy.get('#quarantine-list .q-subject').should('have.text', email.subject);
+      cy.get('#quarantine-list .q-sender').should('contain.text', email.sender);
+    });
+
+    cy.get('#q-search').clear().type('no-matching-email@example.invalid');
+    cy.get('#quarantine-list').should('contain.text', 'No anomalies found.');
+    cy.checkA11y('#quarantine-view', {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'section508'] }
+    });
+    cy.get('#q-search').clear();
+    cy.get('#quarantine-list .q-item').should('have.length', emails.length);
+  });
+
+  it('opens the matching article modal for every cyber news card', () => {
+    const articles = [
+      {
+        title: 'Phantom Payload Campaign Surges',
+        date: 'Oct 18, 2026',
+        summary: 'A new wave of fake Geek Squad invoices is bypassing traditional spam filters.',
+        content: 'Security researchers have identified a massive spike in invoice fraud utilizing PDF attachments and obfuscated sender domains to bypass baseline defenses.'
+      },
+      {
+        title: 'Zero-Width Character Exploits',
+        date: 'Oct 17, 2026',
+        summary: 'Spammers are sandwiching invisible characters between letters to hide trigger words.',
+        content: "By injecting Unicode zero-width spaces (U+200B) into words like 'P a s s w o r d', attackers are successfully evading standard RegEx scanners."
+      }
+    ];
+
+    reportTestProgress({ step: 'Opening and verifying each cyber news article', view: 'dashboard' });
+    cy.get('#news-overlay .overlay-text', { timeout: 3000 }).should('have.text', 'Link Established');
+    cy.get('#news-list .news-card').should('have.length', articles.length).each(($card, index) => {
+      const article = articles[index];
+      cy.wrap($card).should('contain.text', article.title);
+      cy.wrap($card).should('contain.text', article.summary).click();
+      cy.get('#news-modal').should('be.visible');
+      cy.get('#n-title').should('have.text', article.title);
+      cy.get('#n-date').should('have.text', article.date);
+      cy.get('#n-body').should('have.text', article.content);
+      cy.get('#news-modal .close-btn').click();
+      cy.get('#news-modal').should('not.be.visible');
+    });
   });
 
   //Dynamic Form States & ARIA Validation
@@ -205,9 +407,38 @@ it('Manages focus and allows keyboard exit for the Email Inspector Modal', () =>
     cy.get('.w-tag').should('contain.text', 'safe-sender@google.com');
 
     // Run Axe specifically on the newly generated elements
-    cy.checkA11y('#whitelist-tags', {
-      runOnly: { type: 'tag', values: ['wcag2aa'] }
+    cy.checkA11y('#dashboard-view', {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'section508'] }
     });
+  });
+
+  it('renders HTML and event-handler payloads in whitelist input as inert text', () => {
+    const payload = '<svg/onload=window.__xssexecuted=true>@example.com';
+    cy.window().then(win => {
+      win.__xssexecuted = false;
+    });
+
+    cy.get('#whitelist-input').type(payload);
+    cy.contains('.whitelist-input-group button', 'Add Sender').click();
+
+    cy.get('#whitelist-tags .w-tag').should('contain.text', payload);
+    cy.get('#whitelist-tags svg').should('not.exist');
+    cy.window().its('__xssexecuted').should('be.false');
+  });
+
+  it('does not execute markup entered into quarantine search', () => {
+    const payload = '<svg/onload=window.__xssExecuted=true>';
+    cy.window().then(win => {
+      win.__xssExecuted = false;
+    });
+
+    cy.contains('.tab-btn', 'Quarantine Vault').click();
+    cy.get('#quarantine-overlay .overlay-text', { timeout: 3000 }).should('have.text', 'Access Granted');
+    cy.get('#q-search').type(payload);
+
+    cy.get('#quarantine-list').should('contain.text', 'No anomalies found.');
+    cy.get('#quarantine-list svg').should('not.exist');
+    cy.window().its('__xssExecuted').should('be.false');
   });
 
   it('scans representative mock inbox data using enabled filters and the whitelist', () => {
@@ -219,14 +450,14 @@ it('Manages focus and allows keyboard exit for the Email Inspector Modal', () =>
     cy.get('#whitelist-input').type('trusted@example.com{enter}');
     cy.get('#whitelist-tags').should('contain.text', 'trusted@example.com');
 
-    cy.get('#save-btn').click();
+    cy.get('#save-btn').focus().type('{enter}');
     cy.get('#mock-scan-result').should('contain.text', 'Mock filters and trusted senders saved.');
-    cy.get('#scan-mock-inbox-btn').click();
+    cy.get('#scan-mock-inbox-btn').focus().type('{enter}');
 
     cy.get('#mock-scan-result').should('have.text', 'Scanned 11 sample emails; quarantined 9.');
-    cy.get('#total-blocked').should('have.text', '11');
+    cy.get('#total-blocked').should('have.text', String(createService().filters.length + 9));
     cy.contains('.tab-btn', 'Quarantine Vault').click();
-    cy.get('#quarantine-list .q-item').should('have.length', 11);
+    cy.get('#quarantine-list .q-item').should('have.length', createService().filters.length + 9);
     cy.get('#quarantine-list').should('not.contain.text', 'trusted@example.com');
   });
 
@@ -249,7 +480,7 @@ describe('NebulousSearch UI Framework', () => {
     cy.get('#dashboard-overlay .glass-spinner').should('exist');
     cy.contains('.overlay-text', 'Scanning local airspace...').should('be.visible');
 
-    cy.get('#total-blocked').should('have.text', '2');
+    cy.get('#total-blocked').should('have.text', String(createService().filters.length));
     cy.get('#dashboard-overlay .overlay-text').should('have.text', 'Airspace Secured');
   });
 
@@ -259,7 +490,7 @@ describe('NebulousSearch UI Framework', () => {
     reportTestProgress({ step: 'Expanding analytics details', view: 'dashboard', action: 'expand-stats' });
     cy.get('.stats-header').click();
     reportTestProgress({ step: 'Purging analytics', action: 'purge-start' });
-    cy.get('#purge-btn').should('be.visible').click();
+    cy.get('#purge-btn').should('be.visible').focus().type('{enter}');
 
     cy.get('#purge-overlay').should('be.visible');
     cy.get('#purge-overlay .glass-spinner').should('exist');
@@ -274,7 +505,7 @@ describe('NebulousSearch UI Framework', () => {
     cy.contains('.tab-btn', 'Quarantine Vault').click();
     cy.get('#quarantine-view').should('be.visible');
     cy.get('#quarantine-overlay .overlay-text', { timeout: 3000 }).should('have.text', 'Access Granted');
-    cy.get('#quarantine-list .q-item').should('have.length', 2);
+    cy.get('#quarantine-list .q-item').should('have.length', createService().filters.length);
     cy.get('#dashboard-view').should('not.be.visible');
 
     reportTestProgress({ step: 'Opening Threat Intel', view: 'intel' });

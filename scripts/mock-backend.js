@@ -83,6 +83,62 @@
       date: 'Oct 17, 14:30 PM',
       filterId: 'period_obfuscation',
       body: 'Thank you for your purchase. You have been billed $399.99 for your annual protection plan. Call us to cancel.'
+    },
+    {
+      id: 'thread-003',
+      subject: 'Payment     is         overdue',
+      sender: 'billing@asteroid-belt.example.net',
+      date: 'Oct 16, 09:00 AM',
+      filterId: 'excessive_spaces',
+      body: 'This notice contains structural spacing anomalies.'
+    },
+    {
+      id: 'thread-004',
+      subject: 'P\u200Ba\u200By\u200BP\u200Ba\u200Bl verification',
+      sender: 'notice@dark-matter.example.net',
+      date: 'Oct 15, 10:15 AM',
+      filterId: 'zero_width_chars',
+      body: 'This notice contains invisible zero-width characters.'
+    },
+    {
+      id: 'thread-005',
+      subject: 'URGENT SECURITY ALERT',
+      sender: 'security@solar-flare.example.net',
+      date: 'Oct 14, 11:30 AM',
+      filterId: 'all_caps_subject',
+      body: 'This subject uses excessive capitalization.'
+    },
+    {
+      id: 'thread-006',
+      subject: 'Bitcoin seed phrase giveaway',
+      sender: 'wallet@crypto-example.net',
+      date: 'Oct 13, 12:45 PM',
+      filterId: 'crypto_phishing',
+      body: 'Claim this suspicious cryptocurrency offer.'
+    },
+    {
+      id: 'thread-007',
+      subject: 'Norton renewal receipt',
+      sender: 'receipts@false-payload.example.net',
+      date: 'Oct 12, 01:00 PM',
+      filterId: 'fake_invoice',
+      body: 'This message impersonates a vendor with a fake renewal charge.'
+    },
+    {
+      id: 'thread-008',
+      subject: '12345 !!!',
+      sender: 'numbers@cosmic-vacuum.example.net',
+      date: 'Oct 11, 02:15 PM',
+      filterId: 'no_alphabetical',
+      body: 'This subject contains no alphabetical characters.'
+    },
+    {
+      id: 'thread-009',
+      subject: 'Meeting notes',
+      sender: '0123456789abcdef0123456789abcdef@example.net',
+      date: 'Oct 10, 03:30 PM',
+      filterId: 'suspicious_sender',
+      body: 'This email has an anomalous sender address.'
     }
   ];
 
@@ -225,6 +281,7 @@
       filterLogic,
       sampleInbox: sampleInbox.map(message => ({ ...message })),
       getDashboardData,
+      getQuarantineData: methods.getQuarantineData,
       clearStats: methods.clearStats,
       saveFilterSettings: methods.saveFilterSettings,
       scanMockInbox,
