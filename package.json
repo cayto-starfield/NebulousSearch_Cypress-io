@@ -162,7 +162,8 @@
   },
 "scripts": {
     "test": "cypress run",
-    "cy:open": "cypress open"
+    "cy:open": "cypress open",
+    "serve": "node scripts/serve.js"
   },
   "bugs": {
     "url": "https://github.com/cayto-starfield/NebulousSearch_Cypress-io/issues"
