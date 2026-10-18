@@ -1,6 +1,6 @@
 # Section 508 Compliance Test Plan & Cases
 
-**Project:** NebulousSearch Cypress Mock App  
+**Project:** NebulousSearch Cypress Test App  
 **Prepared by:** Cayto Nova, Certified DHS Trusted Tester (TT-2411-05157)  
 
 ## 1. Test Plan for Achieving 100% Section 508 Compliance
