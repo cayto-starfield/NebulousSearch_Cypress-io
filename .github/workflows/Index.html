@@ -17,7 +17,7 @@
     <div class="app-wrapper">
       
       <!-- LEFT SIDEBAR: Cyber News Network -->
-      <aside class="sidebar">
+      <aside class="sidebar" aria-label="AI Cyber News">
         <!-- New News Overlay -->
         <div id="news-overlay" class="glass-overlay" style="display:none;"></div>
         
@@ -107,9 +107,79 @@
         <!-- Threat Intel View -->
         <div id="intel-view" style="display:none;">
           <h2 class="section-title" style="margin-top:0;">Know Your Enemy</h2>
-          <!-- Included Intel Cards from previous steps -->
-          <div class="intel-card"><div class="intel-header"><h3>🌑 Dark Matter</h3></div><div class="intel-body"><p>Spammers insert invisible characters...</p><div class="nebulous-box"><strong>✨ The Nebulous Solution:</strong> Looks for alphanumeric interruption.</div></div></div>
-          <div class="intel-card"><div class="intel-header"><h3>☄️ Asteroid Belt</h3></div><div class="intel-body"><p>Spammers break up layout using excessive spaces...</p><div class="nebulous-box"><strong>✨ The Nebulous Solution:</strong> Targets massive structural anomalies.</div></div></div>
+          <p class="intel-intro">These deterministic mock rules flag patterns for review. A match is a warning signal, not proof that a message is malicious.</p>
+          <article class="intel-card" data-filter-id="excessive_spaces">
+            <div class="intel-header"><h3>☄️ Asteroid Belt</h3></div>
+            <div class="intel-body">
+              <p>Looks for unusual spacing in the subject, which can disrupt normal reading or split words to evade simple text matching.</p>
+              <p><strong>Detection:</strong> Two gaps of at least five whitespace characters, or a word with six or more letters separated by one or two spaces.</p>
+              <p><strong>Example:</strong> <code>Payment     is         overdue</code> or <code>P a s s w o r d</code>.</p>
+            </div>
+          </article>
+          <article class="intel-card" data-filter-id="zero_width_chars">
+            <div class="intel-header"><h3>🌑 Dark Matter</h3></div>
+            <div class="intel-body">
+              <p>Finds invisible Unicode formatting characters embedded between ordinary letters or digits in the subject.</p>
+              <p><strong>Detection:</strong> Repeated zero-width characters (U+200B–U+200D or U+FEFF) interrupting an alphanumeric string.</p>
+              <p><strong>Example:</strong> A subject that visually resembles <code>PayPal</code> but contains invisible separators between its characters.</p>
+            </div>
+          </article>
+          <article class="intel-card" data-filter-id="urgent_phishing">
+            <div class="intel-header"><h3>🪐 False Gravity</h3></div>
+            <div class="intel-body">
+              <p>Flags subject lines using a short list of account-pressure phrases commonly used to rush recipients into acting.</p>
+              <p><strong>Detection:</strong> “Account suspended,” “action required,” “final warning,” “immediate action required,” or “password expired,” regardless of letter case.</p>
+              <p><strong>Example:</strong> <code>ACCOUNT SUSPENDED: Immediate Action Required</code>.</p>
+            </div>
+          </article>
+          <article class="intel-card" data-filter-id="all_caps_subject">
+            <div class="intel-header"><h3>☀️ Solar Flare</h3></div>
+            <div class="intel-body">
+              <p>Identifies subjects whose alphabetic text is entirely uppercase, a pattern that can make attention-grabbing messages stand out.</p>
+              <p><strong>Detection:</strong> At least six letters, all uppercase; an initial <code>Re:</code>, <code>Fwd:</code>, or <code>Fw:</code> prefix is ignored.</p>
+              <p><strong>Example:</strong> <code>URGENT SECURITY ALERT</code>.</p>
+            </div>
+          </article>
+          <article class="intel-card" data-filter-id="crypto_phishing">
+            <div class="intel-header"><h3>₿ Crypto &amp; Wallet Phishing</h3></div>
+            <div class="intel-body">
+              <p>Flags cryptocurrency-related wording in the subject that can appear in wallet theft or giveaway lures.</p>
+              <p><strong>Detection:</strong> The phrases “bitcoin,” “crypto wallet,” “seed phrase,” or “usdt giveaway,” without regard to case.</p>
+              <p><strong>Example:</strong> <code>Bitcoin seed phrase giveaway</code>.</p>
+            </div>
+          </article>
+          <article class="intel-card" data-filter-id="fake_invoice">
+            <div class="intel-header"><h3>📦 False Payload</h3></div>
+            <div class="intel-body">
+              <p>Looks for a known vendor name followed by a billing or renewal term in the subject or message body.</p>
+              <p><strong>Detection:</strong> Geek Squad, McAfee, Norton, or LifeLock followed later by “invoice,” “renewal,” “receipt,” “billed,” or “auto-charge.”</p>
+              <p><strong>Example:</strong> <code>Norton renewal receipt</code>. The matcher checks text patterns, not whether a vendor is authentic.</p>
+            </div>
+          </article>
+          <article class="intel-card" data-filter-id="period_obfuscation">
+            <div class="intel-header"><h3>☄️ Meteor Shower</h3></div>
+            <div class="intel-body">
+              <p>Detects periods inserted between letters in the subject, a simple form of obfuscation that can interfere with keyword matching.</p>
+              <p><strong>Detection:</strong> At least four alphabetic characters separated by one or more periods; whitespace is ignored.</p>
+              <p><strong>Example:</strong> <code>p.a.y.p.a.l</code>.</p>
+            </div>
+          </article>
+          <article class="intel-card" data-filter-id="no_alphabetical">
+            <div class="intel-header"><h3>🌌 Cosmic Vacuum</h3></div>
+            <div class="intel-body">
+              <p>Flags empty subjects and subjects containing no alphabetic Unicode characters.</p>
+              <p><strong>Detection:</strong> A subject made only of digits, punctuation, symbols, or emoji is matched.</p>
+              <p><strong>Example:</strong> <code>12345 !!!</code>.</p>
+            </div>
+          </article>
+          <article class="intel-card" data-filter-id="suspicious_sender">
+            <div class="intel-header"><h3>🛰️ Rogue Satellite</h3></div>
+            <div class="intel-body">
+              <p>Checks the sender address for unusual structure. This is a pattern check, not a domain-reputation or authentication lookup.</p>
+              <p><strong>Detection:</strong> Addresses over 50 characters, four or more unusual special characters, a listed profanity, or a local part resembling a long hex hash, a long vowelless string, or alternating letter/number runs.</p>
+              <p><strong>Example:</strong> <code>0123456789abcdef0123456789abcdef@example.net</code>.</p>
+            </div>
+          </article>
         </div>
       </main>
     </div>
@@ -381,11 +451,15 @@
   .tag { background: rgba(255, 71, 87, 0.15); color: #ff6b81; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; border: 1px solid rgba(255, 71, 87, 0.3); }
 
   /* Threat Intel */
+  .intel-intro { color: var(--text-muted); line-height: 1.6; margin: 0 0 20px; }
   .intel-card { background: var(--glass-hover); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
   .intel-header { background: rgba(0,0,0,0.2); padding: 15px 20px; border-bottom: 1px solid var(--glass-border); }
   .intel-header h3 { margin: 0; font-size: 16px; color: var(--accent); }
   .intel-body { padding: 20px; font-size: 14px; line-height: 1.6; color: var(--text-muted); }
+  .intel-body p { margin: 0 0 10px; }
+  .intel-body p:last-child { margin-bottom: 0; }
   .intel-body strong { color: #fff; }
+  .intel-body code { color: var(--accent); overflow-wrap: anywhere; }
   .nebulous-box { margin-top: 15px; background: rgba(0, 245, 212, 0.05); border-left: 3px solid var(--accent); padding: 15px; border-radius: 0 8px 8px 0; color: #d1f2eb; }
 
   /* Glass Modals */

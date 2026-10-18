@@ -12,7 +12,7 @@
     { id: 'urgent_phishing', name: 'False Gravity', description: 'Catches fake urgency/panic tactics like "Account Suspended".' },
     { id: 'all_caps_subject', name: 'Solar Flare', description: 'Trashes emails where the subject line is shouting.' },
     { id: 'crypto_phishing', name: 'Crypto & Wallet Phishing', description: 'Deletes emails with common cryptocurrency scam keywords.' },
-    { id: 'fake_invoice', name: 'False Payload', description: 'Blocks fake renewal receipts from scammers impersonating Geek Squad, McAfee, Norton, or PayPal.' },
+    { id: 'fake_invoice', name: 'False Payload', description: 'Blocks fake renewal receipts mentioning Geek Squad, McAfee, Norton, or LifeLock.' },
     { id: 'period_obfuscation', name: 'Meteor Shower', description: 'Blocks emails where spammers insert periods between every letter (e.g. p.a.y.p.a.l).' },
     { id: 'no_alphabetical', name: 'Cosmic Vacuum', description: 'Intercepts emails with subject lines containing zero alphabetical letters (purely digits, symbols, or emojis).' },
     { id: 'suspicious_sender', name: 'Rogue Satellite', description: 'Intercepts emails from anomalous senders (over 50 characters, random alphanumeric strings, profanity, or excessive special characters).' }

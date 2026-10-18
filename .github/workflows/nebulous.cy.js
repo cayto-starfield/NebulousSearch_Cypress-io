@@ -51,6 +51,8 @@ after(() => {
 });
 
 describe('Mock filter rules', () => {
+  // Confirms the seeded quarantine set contains exactly one representative message for every
+  // registered rule, and that each message actually satisfies the matcher named by its filterId.
   it('seeds one matching vault email for every filter', () => {
     const service = createService();
     const emails = service.getQuarantineData();
@@ -64,6 +66,8 @@ describe('Mock filter rules', () => {
     });
   });
 
+  // Exercises both matching and non-matching examples for every rule so the test documents
+  // the intended boundary of each heuristic, including sender- and body-based checks.
   it('matches the supplied filter patterns and leaves safe samples alone', () => {
     reportTestProgress({
       status: 'running',
@@ -93,6 +97,8 @@ describe('Mock filter rules', () => {
     expect(filterLogic.suspicious_sender('', '', 'colleague@example.com')).to.equal(false);
   });
 
+  // Verifies scanning is repeatable without duplicating quarantined messages, and that clearing
+  // analytics/quarantine state makes the same fixture eligible for a fresh scan.
   it('scans each sample idempotently and allows scanning again after a purge', () => {
     const service = createService();
     service.saveFilterSettings(service.filters.map(filter => filter.id), ['trusted@example.com']);
@@ -128,7 +134,9 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     }).then(() => visitApp()).then(() => cy.injectAxe());
   });
 
-  it('Passes Section 508 & WCAG 2.1 AA checks on Dashboard Load', () => {
+  // Runs axe against the fully loaded initial dashboard using WCAG 2.0 A/AA and Section 508 tags.
+  // Waiting for the completion state ensures the scan covers rendered app content, not just loaders.
+  it('Passes Section 508 & WCAG 2.0 A/AA checks on Dashboard Load', () => {
     reportTestProgress({ step: 'Waiting for dashboard data', view: 'dashboard' });
     cy.get('#dashboard-overlay .overlay-text', { timeout: 3000 }).should('have.text', 'Airspace Secured');
 
@@ -141,6 +149,8 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     });
   });
 
+  // Guards the page-level accessibility foundation: language, title, one primary heading,
+  // main/navigation/news landmarks, and the live region used to announce test progress.
   it('exposes required document language, title, landmarks, and heading structure', () => {
     cy.document().should(document => {
       expect(document.documentElement).to.have.attr('lang').and.not.be.empty;
@@ -148,6 +158,9 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
       expect(document.querySelectorAll('h1')).to.have.length(1);
       expect(document.querySelector('main')).to.exist;
       expect(document.querySelector('nav[aria-label="Main navigation"]')).to.exist;
+      expect(document.querySelector('aside[aria-label="AI Cyber News"]')).to.exist;
+      expect(document.querySelector('#test-run-status')).to.have.attr('role', 'status');
+      expect(document.querySelector('#test-run-status')).to.have.attr('aria-live', 'polite');
     });
 
     cy.checkA11y(null, {
@@ -155,6 +168,48 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     });
   });
 
+  // Ensures controls have programmatic names, images expose alt text, and any future video
+  // includes captions; the initial application state is waited out before inspecting the DOM.
+  it('provides accessible names and text alternatives for interactive and non-text content', () => {
+    cy.get('#dashboard-overlay .overlay-text', { timeout: 3000 }).should('have.text', 'Airspace Secured');
+    cy.get('#news-overlay .overlay-text', { timeout: 3000 }).should('have.text', 'Link Established');
+
+    cy.get('button').each($button => {
+      const button = $button[0];
+      const labelledBy = button.getAttribute('aria-labelledby');
+      const referencedLabel = labelledBy
+        ? labelledBy.split(/\s+/).map(id => button.ownerDocument.getElementById(id)?.textContent || '').join(' ')
+        : '';
+      const accessibleName = button.getAttribute('aria-label') ||
+        referencedLabel ||
+        button.innerText ||
+        '';
+      expect(accessibleName.trim(), `button ${button.outerHTML}`).not.to.equal('');
+    });
+
+    cy.get('input, select, textarea').each($field => {
+      const field = $field[0];
+      const labelledBy = field.getAttribute('aria-labelledby');
+      const referencedLabel = labelledBy
+        ? labelledBy.split(/\s+/).map(id => field.ownerDocument.getElementById(id)?.textContent || '').join(' ')
+        : '';
+      const associatedLabel = field.labels ? Array.from(field.labels).map(label => label.textContent).join(' ') : '';
+      const accessibleName = field.getAttribute('aria-label') || referencedLabel || associatedLabel;
+      expect(accessibleName.trim(), `form field ${field.outerHTML}`).not.to.equal('');
+    });
+
+    cy.get('img').each($image => {
+      expect($image[0]).to.have.attr('alt');
+    });
+    cy.document().should(document => {
+      Array.from(document.querySelectorAll('video')).forEach(video => {
+        expect(video.querySelector('track[kind="captions"]')).not.to.equal(null);
+      });
+    });
+  });
+
+  // Opens the vault, waits for its results and success state, then scans the populated result
+  // region for Section 508/WCAG violations rather than checking the hidden initial view.
   it('Passes accessibility checks after opening the Quarantine Vault', () => {
     reportTestProgress({
       step: 'Opening the Quarantine Vault',
@@ -174,6 +229,9 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     });
   });
 
+  // Exercises the primary navigation, search, filter chips, and checkboxes using keyboard input.
+  // Asserts visible focus, active/pressed state, updated results, live announcements, and axe
+  // results for both the initial and filtered quarantine states.
   it('keeps navigation, filter controls, and search operable from the keyboard', () => {
     cy.get('.tab-btn').first().focus();
     cy.press(Cypress.Keyboard.Keys.TAB);
@@ -219,7 +277,9 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     });
   });
 
-  it('makes every cyber news card keyboard accessible and its modal Section 508 conformant', () => {
+  // Activates a cyber-news card with Enter, verifies modal focus and an informative image
+  // alternative, scans the open dialog, then checks Escape dismissal and focus restoration.
+  it('makes a cyber news card keyboard accessible and its modal Section 508 conformant', () => {
     cy.get('#news-overlay .overlay-text', { timeout: 3000 }).should('have.text', 'Link Established');
     cy.get('#news-list .news-card').first().focus().should('have.focus').type('{enter}');
     cy.get('#news-modal').should('be.visible');
@@ -235,6 +295,26 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     cy.get('#news-list .news-card').first().should('have.focus');
   });
 
+  // Keeps the Threat Intel documentation in sync with the canonical filter registry by checking
+  // one named, explained card per filter, then runs axe on the visible intel content.
+  it('passes Section 508 and WCAG checks on the Threat Intel view', () => {
+    cy.contains('.tab-btn', 'Threat Intel').click();
+    cy.get('#intel-view').should('be.visible');
+    const filters = createService().filters;
+    cy.get('#intel-view .intel-card').should('have.length', filters.length).each(($card, index) => {
+      const filter = filters[index];
+      cy.wrap($card).should('have.attr', 'data-filter-id', filter.id);
+      cy.wrap($card).find('h3').should('contain.text', filter.name);
+      cy.wrap($card).find('.intel-body').should('contain.text', 'Detection:');
+      cy.wrap($card).find('.intel-body').should('contain.text', 'Example:');
+    });
+    cy.checkA11y('#intel-view', {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'section508'] }
+    });
+  });
+
+  // Verifies each dynamic filter checkbox receives a registry-derived accessible name and
+  // confirms the analytics disclosure exposes expanded state and its revealed content.
   it('provides accessible names, state, and keyboard operation for filter controls', () => {
     const checkboxes = createService().filters;
     cy.get('#filter-list input[type="checkbox"]').should('have.length', checkboxes.length).each(($checkbox, index) => {
@@ -249,6 +329,8 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     cy.get('#stats-container').should('have.attr', 'aria-hidden', 'false');
   });
 
+  // Checks the page has no horizontal overflow at a 320px viewport before and after navigating
+  // to the vault and filtering results, covering both the shell and a data-populated view.
   it('reflows the interface at a narrow viewport without horizontal scrolling', () => {
     cy.viewport(320, 720);
     cy.document().should(document => {
@@ -264,9 +346,35 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     });
   });
 
-  //Keyboard Navigation & Focus State Testing
-  // Users with motor disabilities rely entirely on the Tab and Enter keys.
-  // You must verify that hidden elements become visible when activated by a keyboard, not just a mouse click.
+  // Applies the WCAG text-spacing override values and a viewport representing a 200%-scaled
+  // narrow layout, then checks that navigation, search results, and the full page still reflow.
+  it('preserves content and controls with WCAG text-spacing overrides and 200% layout scaling', () => {
+    cy.viewport(640, 900);
+    cy.document().then(document => {
+      const style = document.createElement('style');
+      style.id = 'section508-text-spacing-test';
+      style.textContent = `
+        * {
+          line-height: 1.5 !important;
+          letter-spacing: 0.12em !important;
+          word-spacing: 0.16em !important;
+        }
+        p { margin-bottom: 2em !important; }
+      `;
+      document.head.appendChild(style);
+    });
+
+    cy.get('h1').should('be.visible');
+    cy.get('.tab-btn').contains('Quarantine Vault').focus().type('{enter}');
+    cy.get('#q-search').should('be.visible').type('billing@');
+    cy.get('#quarantine-list .q-item').should('have.length.greaterThan', 0);
+    cy.document().should(document => {
+      expect(document.documentElement.scrollWidth).to.be.at.most(document.documentElement.clientWidth);
+    });
+  });
+
+  // Independently verifies the dashboard statistics disclosure can be reached and opened with
+  // Enter, exposes its content, and remains axe-clean after the previously hidden section appears.
   it('Operates the Dashboard Stats expander strictly via keyboard', () => {
     reportTestProgress({ step: 'Testing keyboard navigation on Stats Card' });
 
@@ -285,10 +393,9 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
     });
   });
 
-//Modal Accessibility (Focus Management & Esc Key)
-// When a modal opens (like inspecting an email or reading a news article),
-// accessibility standards dictate two things: focus must immediately shift inside the modal, and the Escape key must close it.
-it('Manages focus and allows keyboard exit for the Email Inspector Modal', () => {
+  // Checks the email inspector's dialog semantics, Escape-key dismissal, and focus return to
+  // the invoking email button. The axe scan covers the dialog while it is open.
+  it('Manages focus and allows keyboard exit for the Email Inspector Modal', () => {
     reportTestProgress({ step: 'Opening Quarantine Vault and triggering modal' });
     cy.contains('.tab-btn', 'Quarantine Vault').click();
 
@@ -313,6 +420,8 @@ it('Manages focus and allows keyboard exit for the Email Inspector Modal', () =>
     cy.get('.view-btn').first().should('have.focus');
   });
 
+  // Iterates through every seeded vault entry and verifies the corresponding inspector presents
+  // the exact subject, sender, matching filter name, and body before closing for the next item.
   it('opens the matching email modal for every quarantine entry', () => {
     const emails = createService().getQuarantineData();
 
@@ -332,6 +441,8 @@ it('Manages focus and allows keyboard exit for the Email Inspector Modal', () =>
     });
   });
 
+  // Searches every fixture independently by subject and sender, asserts the unique matching
+  // result, covers the no-match announcement, scans that empty state with axe, and resets search.
   it('searches the vault by every seeded email subject and sender', () => {
     const emails = createService().getQuarantineData();
 
@@ -361,6 +472,8 @@ it('Manages focus and allows keyboard exit for the Email Inspector Modal', () =>
     cy.get('#quarantine-list .q-item').should('have.length', emails.length);
   });
 
+  // Opens each news article from its visible card and compares title, date, and full body with
+  // fixture data, ensuring cards are wired to their own detail dialog.
   it('opens the matching article modal for every cyber news card', () => {
     const articles = [
       {
@@ -392,26 +505,27 @@ it('Manages focus and allows keyboard exit for the Email Inspector Modal', () =>
     });
   });
 
-  //Dynamic Form States & ARIA Validation
-  // When a user adds an email to the whitelist, the DOM changes. You need to verify that these dynamic updates do not introduce new accessibility
-  //   violations, and that error states are properly handled.
+  // Adds a trusted address through the keyboard, verifies the generated list item, and reruns
+  // axe over the dashboard after the dynamic DOM update.
   it('Maintains accessibility during dynamic Whitelist input creation', () => {
     reportTestProgress({ step: 'Testing dynamic DOM updates in Whitelist' });
 
     // Type and submit via keyboard
     cy.get('#whitelist-input')
       .type('safe-sender@google.com')
-      .type('{enter}'); // Assuming you wrap the input in a form or listen for Enter
+      .type('{enter}');
 
     // Verify the tag was created
     cy.get('.w-tag').should('contain.text', 'safe-sender@google.com');
 
-    // Run Axe specifically on the newly generated elements
+    // Scan the dashboard containing the newly generated list item.
     cy.checkA11y('#dashboard-view', {
       runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'section508'] }
     });
   });
 
+  // Uses HTML and an event-handler payload as inert whitelist input, asserting the submitted
+  // value is displayed as text, no SVG is created, and the handler never executes.
   it('renders HTML and event-handler payloads in whitelist input as inert text', () => {
     const payload = '<svg/onload=window.__xssexecuted=true>@example.com';
     cy.window().then(win => {
@@ -426,6 +540,8 @@ it('Manages focus and allows keyboard exit for the Email Inspector Modal', () =>
     cy.window().its('__xssexecuted').should('be.false');
   });
 
+  // Submits markup-shaped text to the quarantine search and verifies it produces an ordinary
+  // no-results state without inserting active markup or executing an event handler.
   it('does not execute markup entered into quarantine search', () => {
     const payload = '<svg/onload=window.__xssExecuted=true>';
     cy.window().then(win => {
@@ -441,6 +557,8 @@ it('Manages focus and allows keyboard exit for the Email Inspector Modal', () =>
     cy.window().its('__xssExecuted').should('be.false');
   });
 
+  // Saves all filters and one trusted sender, scans the deterministic 11-message inbox, and
+  // verifies reported totals, expanded quarantine contents, and whitelist exclusion end to end.
   it('scans representative mock inbox data using enabled filters and the whitelist', () => {
     reportTestProgress({
       step: 'Enabling all filters and adding a trusted sender',
@@ -452,6 +570,7 @@ it('Manages focus and allows keyboard exit for the Email Inspector Modal', () =>
 
     cy.get('#save-btn').focus().type('{enter}');
     cy.get('#mock-scan-result').should('contain.text', 'Mock filters and trusted senders saved.');
+    cy.get('#mock-scan-result').should('have.attr', 'role', 'status').and('have.attr', 'aria-live', 'polite');
     cy.get('#scan-mock-inbox-btn').focus().type('{enter}');
 
     cy.get('#mock-scan-result').should('have.text', 'Scanned 11 sample emails; quarantined 9.');
@@ -474,6 +593,8 @@ describe('NebulousSearch UI Framework', () => {
     }).then(visitApp);
   });
 
+  // Confirms the dashboard and news loading transitions reach their expected completion states
+  // and that the displayed dashboard total matches the seeded mock quarantine.
   it('Validates Glassmorphism Loading States on Dashboard Load', () => {
     reportTestProgress({ step: 'Checking dashboard loading animation', view: 'dashboard' });
     cy.get('#dashboard-overlay').should('be.visible');
@@ -484,6 +605,8 @@ describe('NebulousSearch UI Framework', () => {
     cy.get('#dashboard-overlay .overlay-text').should('have.text', 'Airspace Secured');
   });
 
+  // Exercises the analytics disclosure and destructive purge confirmation, then checks the
+  // progress overlay, spinner, zeroed count, and successful completion feedback.
   it('Executes the Purge Analytics Workflow', () => {
     cy.on('window:confirm', () => true);
 
@@ -500,6 +623,8 @@ describe('NebulousSearch UI Framework', () => {
     reportTestProgress({ step: 'Purge completed', action: 'purge-complete' });
   });
 
+  // Verifies navigation changes the visible view and current-page state for the vault, loads
+  // its seeded results, and then opens the Threat Intel tab.
   it('Navigates the Command Center Tabs', () => {
     reportTestProgress({ step: 'Opening the Quarantine Vault', view: 'quarantine' });
     cy.contains('.tab-btn', 'Quarantine Vault').click();
