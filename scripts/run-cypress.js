@@ -23,43 +23,53 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
   process.on(signal, () => shutdown(0));
 }
 
-async function isServerReady() {
-  const url = 'http://localhost:8080/.github/workflows/Index.html';
+async function hasProgressApi(port) {
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/__test-progress`);
+    if (!response.ok) return false;
+    const state = await response.json();
+    return ['idle', 'running', 'passed', 'failed'].includes(state.status) &&
+      typeof state.sequence === 'number';
+  } catch {
+    return false;
+  }
+}
+
+async function waitForProgressApi(port) {
   for (let attempt = 0; attempt < 30; attempt += 1) {
     if (shuttingDown) return false;
-
-    try {
-      const response = await fetch(url);
-      if (response.ok) return true;
-    } catch {
-      await new Promise(resolve => setTimeout(resolve, 250));
-    }
+    if (await hasProgressApi(port)) return true;
+    await new Promise(resolve => setTimeout(resolve, 250));
   }
-
   return false;
 }
 
 async function start() {
-  if (!await isServerReady()) {
+  const serverPort = 8081;
+
+  if (!await hasProgressApi(serverPort)) {
     server = spawn(process.execPath, [path.join(__dirname, 'serve.js')], {
-      stdio: 'inherit'
+      stdio: 'inherit',
+      env: { ...process.env, PORT: String(serverPort) }
     });
 
     server.on('error', error => {
-      console.error('Unable to start the local test server:', error);
+      console.error('Unable to start the test progress server:', error);
       shutdown(1);
     });
 
     server.on('exit', code => {
       if (!shuttingDown && code !== 0) {
-        console.error(`Local test server exited with code ${code}.`);
+        console.error(`Test progress server exited with code ${code}.`);
         shutdown(code || 1);
       }
     });
 
-    if (!await isServerReady()) {
-      console.error('The local test server did not become ready within 7.5 seconds.');
-      shutdown(1);
+    if (!await waitForProgressApi(serverPort)) {
+      if (!shuttingDown) {
+        console.error(`The test progress server did not become ready on port ${serverPort}.`);
+        shutdown(1);
+      }
       return;
     }
   }
@@ -70,7 +80,8 @@ async function start() {
     ? ['run', '--headed', '--browser', 'electron', '--runner-ui', '--no-exit']
     : ['open'];
   cypress = spawn(process.execPath, [cypressCli, ...cypressArgs], {
-    stdio: 'inherit'
+    stdio: 'inherit',
+    env: { ...process.env, CYPRESS_BASE_URL: `http://127.0.0.1:${serverPort}` }
   });
 
   cypress.on('error', error => {

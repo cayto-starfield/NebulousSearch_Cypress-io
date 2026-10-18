@@ -3,13 +3,9 @@ Front end ui + accessibility test automation framework
 
 ## Run the tests
 
-Run the tests in a visible browser with the Cypress runner and command log shown. The tests start automatically, and the runner stays open when they finish so you can review the results. Close the Cypress window to end the command. The local mock server starts automatically if needed:
+Run the tests with `npm test`. Cypress executes the tests in its own browser, and the open mock interface mirrors the current test, step, tab, and purge activity in a live status panel. The test runner stays open when the suite finishes so you can review its results. Close the runner window to end the command.
 
-```sh
-npm test
-```
-
-The mock interface is loaded in the Cypress browser for each test, so the runner displays the test interactions and results alongside the app.
+Keep the mock interface open at `http://localhost:8080` while the tests run. The test-progress server starts automatically on port 8081 if it is not already available.
 
 To open the Cypress runner and choose tests manually:
 
@@ -17,7 +13,7 @@ To open the Cypress runner and choose tests manually:
 npm run cy:open
 ```
 
-Select `nebulous.cy.js` in the Cypress window. This command starts the local server automatically.
+Select `nebulous.cy.js` in the Cypress window. This command starts the test-progress server automatically.
 
 For headless runs (as used in CI):
 

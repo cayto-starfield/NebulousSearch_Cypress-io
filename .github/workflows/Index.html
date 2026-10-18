@@ -8,6 +8,11 @@
   </head>
   <body>
     <div id="bg-layer"></div>
+    <aside id="test-run-status" class="test-run-status" role="status" aria-live="polite" aria-atomic="true" hidden>
+      <strong id="test-run-label"></strong>
+      <h2 id="test-run-name"></h2>
+      <p id="test-run-step"></p>
+    </aside>
     
     <div class="app-wrapper">
       
@@ -47,7 +52,7 @@
               <!-- New Purge Overlay -->
               <div id="purge-overlay" class="glass-overlay" style="display:none;"></div>
               
-              <div class="stats-header" onclick="toggleStats()">
+              <div class="stats-header" role="button" tabindex="0" aria-controls="stats-container" aria-expanded="false" onclick="toggleStats()" onkeydown="handleStatsHeaderKeydown(event)">
                 <div class="stats-main">
                   <h2>Anomalies Neutralized</h2>
                   <div id="total-blocked" class="big-number">0</div>
@@ -55,7 +60,7 @@
                 </div>
                 <div id="expand-icon" class="expand-icon">▼</div>
               </div>
-              <div id="stats-container" class="stats-details" style="display:none;">
+              <div id="stats-container" class="stats-details" aria-hidden="true" style="display:none;">
                 <div id="stats-breakdown"></div>
                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
                   <button type="button" id="purge-btn" class="purge-btn" onclick="purgeStats()">Purge Analytics</button>
@@ -70,14 +75,16 @@
               <div class="whitelist-section">
                 <h2 class="section-title">Trusted Comms (Whitelist)</h2>
                 <div class="whitelist-input-group">
-                  <input type="email" id="whitelist-input" placeholder="Enter exact email...">
+                  <input type="email" id="whitelist-input" aria-label="Trusted sender email" placeholder="Enter exact email..." onkeydown="handleWhitelistKeydown(event)">
                   <button type="button" onclick="addWhitelistItem()" class="secondary-btn">Add Sender</button>
                 </div>
-                <div id="whitelist-tags" style="margin-top: 15px;"></div>
+                <div id="whitelist-tags" role="list" aria-label="Trusted senders" style="margin-top: 15px;"></div>
               </div>
 
               <div class="actions">
+                <button type="button" id="scan-mock-inbox-btn" class="secondary-btn" onclick="scanMockInbox()">Scan Sample Inbox</button>
                 <button type="submit" id="save-btn">Initialize Filters</button>
+                <p id="mock-scan-result" role="status" aria-live="polite"></p>
               </div>
             </form>
           </div>
@@ -106,9 +113,9 @@
     </div>
 
     <!-- Modals -->
-    <div id="email-modal" class="modal">
-      <div class="modal-content">
-        <span class="close-btn" onclick="closeModal('email-modal')">&times;</span>
+    <div id="email-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-subject">
+      <div class="modal-content" tabindex="-1">
+        <button type="button" class="close-btn" aria-label="Close email inspector" onclick="closeModal('email-modal')">&times;</button>
         <h2 id="modal-subject" style="margin-top:0; color:var(--accent);"></h2>
         <div class="modal-meta"><strong>From:</strong> <span id="modal-sender"></span><br><strong>Caught By:</strong> <span id="modal-filter" class="tag"></span></div>
         <div class="modal-warning">⚠️ SECURE TEXT-ONLY VIEW</div>
@@ -116,9 +123,9 @@
       </div>
     </div>
 
-    <div id="news-modal" class="modal">
-      <div class="modal-content" style="max-width: 700px; padding: 0;">
-        <span class="close-btn" onclick="closeModal('news-modal')" style="position: absolute; right: 15px; top: 10px; z-index: 10;">&times;</span>
+    <div id="news-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="n-title">
+      <div class="modal-content" tabindex="-1" style="max-width: 700px; padding: 0;">
+        <button type="button" class="close-btn" aria-label="Close threat article" onclick="closeModal('news-modal')" style="position: absolute; right: 15px; top: 10px; z-index: 10;">&times;</button>
         <img id="n-img" src="" style="width: 100%; height: 250px; object-fit: cover; border-bottom: 2px solid var(--primary);">
         <div style="padding: 25px;">
           <h2 id="n-title" style="margin-top:0; color:var(--accent);"></h2>
@@ -273,6 +280,7 @@
     overflow: hidden; 
   }
   .stats-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .stats-header:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   .stats-header h2 { margin: 0 0 5px 0; font-size: 14px; color: var(--text-muted); font-weight: 500;}
   .big-number { font-size: 36px; font-weight: 700; color: var(--accent); line-height: 1; }
   .expand-icon { transition: transform 0.3s; color: var(--text-muted); }
@@ -330,7 +338,7 @@
   .secondary-btn:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); }
   
   .w-tag { background: rgba(0, 245, 212, 0.1); border: 1px solid var(--accent); color: var(--accent); padding: 6px 12px; border-radius: 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; margin: 0 8px 8px 0; backdrop-filter: blur(4px); }
-  .w-tag-close { cursor: pointer; font-weight: bold; color: var(--accent); opacity: 0.7; font-size: 16px; }
+  .w-tag-close { cursor: pointer; font-weight: bold; color: var(--accent); opacity: 0.7; font-size: 16px; background: transparent; border: 0; padding: 0; line-height: 1; }
   .w-tag-close:hover { opacity: 1; color: #ff4757; }
 
   /* Quarantine Vault */
@@ -455,97 +463,50 @@
     border-radius: 16px;
   }
   .stats-card { border-radius: 12px; } /* Override for the smaller card */
-</style>
 
-<script>
-if (typeof google === 'undefined') {
-  const mockDashboardData = {
-    stats: { total: 42, breakdown: [{ name: 'Dark Matter', count: 42 }] },
-    filters: [],
-    whitelist: []
-  };
-  const mockCyberNews = [
-    {
-      id: 0,
-      title: 'Phantom Payload Campaign Surges',
-      date: 'Oct 18, 2026',
-      summary: 'A new wave of fake Geek Squad invoices is bypassing traditional spam filters.',
-      content: 'Security researchers have identified a massive spike in invoice fraud utilizing PDF attachments and obfuscated sender domains to bypass baseline defenses.',
-      imageUrl: 'https://picsum.photos/seed/cyber1/800/400'
-    },
-    {
-      id: 1,
-      title: 'Zero-Width Character Exploits',
-      date: 'Oct 17, 2026',
-      summary: 'Spammers are sandwiching invisible characters between letters to hide trigger words.',
-      content: "By injecting Unicode zero-width spaces (U+200B) into words like 'P a s s w o r d', attackers are successfully evading standard RegEx scanners.",
-      imageUrl: 'https://picsum.photos/seed/cyber2/800/400'
-    }
-  ];
-  const mockQuarantineData = [
-    {
-      id: 'thread-001',
-      subject: 'ACCOUNT SUSPENDED: Immediate Action Required',
-      sender: 'security@paypaI-alert.com',
-      date: 'Oct 18, 08:15 AM',
-      filterId: 'urgent_phishing',
-      filterName: 'False Gravity (Urgency Scams)',
-      body: 'Your account access has been restricted. Click the secure link below to verify your identity and restore access.'
-    },
-    {
-      id: 'thread-002',
-      subject: 'N.o.r.t.o.n Auto-Renewal Receipt #9982',
-      sender: 'billing@nort0n-secure.net',
-      date: 'Oct 17, 14:30 PM',
-      filterId: 'period_obfuscation',
-      filterName: 'Meteor Shower (Period Obfuscation)',
-      body: 'Thank you for your purchase. You have been billed $399.99 for your annual protection plan. Call us to cancel.'
-    }
-  ];
-  const mockResponses = {
-    getDashboardData: [mockDashboardData, 1000],
-    clearStats: [{ success: true }, 1500],
-    getCyberNews: [mockCyberNews, 1200],
-    getQuarantineData: [mockQuarantineData, 1000],
-    saveFilterSettings: [{ success: true }, 0]
-  };
-
-  function createMockRunner(successHandler, failureHandler) {
-    const runner = {
-      withSuccessHandler(callback) {
-        return createMockRunner(callback, failureHandler);
-      },
-      withFailureHandler(callback) {
-        return createMockRunner(successHandler, callback);
-      }
-    };
-
-    Object.entries(mockResponses).forEach(([method, [result, delay]]) => {
-      runner[method] = () => setTimeout(() => successHandler?.(result), delay);
-    });
-
-    return runner;
+  .test-run-status {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 10000;
+    width: min(360px, calc(100vw - 40px));
+    padding: 16px 20px;
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    background: rgba(12, 14, 24, 0.94);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    color: var(--text);
+    pointer-events: none;
   }
 
-  window.google = {
-    script: {
-      run: {
-        withSuccessHandler: callback => createMockRunner(callback),
-        withFailureHandler: callback => createMockRunner(undefined, callback)
-      }
-    }
-  };
+  .test-run-status[hidden] { display: none; }
+  .test-run-status strong { color: var(--accent); }
+  .test-run-status h2 { margin: 8px 0 4px; font-size: 15px; }
+  .test-run-status p { margin: 0; color: var(--text-muted); font-size: 13px; }
+  .test-run-status[data-state="failed"] strong { color: #ff6b7a; }
+  .test-run-status[data-state="passed"] strong { color: var(--accent); }
+</style>
+
+<script src="/scripts/mock-backend.js"></script>
+<script>
+if (typeof google === 'undefined') {
+  window.google = NebulousMockBackend.createService().createGoogleMock(window);
 }
 
   let rawQuarantineData = [];
   let currentQTag = 'all';
   let rawNewsData = [];
   let currentWhitelist = [];
+  let modalTrigger = null;
 
   // --- DYNAMIC WALLPAPER ENGINE ---
   document.addEventListener('DOMContentLoaded', () => {
     loadDashboard();
     loadNews();
+    if (!new URLSearchParams(window.location.search).has('e2e')) {
+      pollTestProgress();
+      setInterval(pollTestProgress, 500);
+    }
   });
 
   // --- UI/UX LOADER HELPERS ---
@@ -594,6 +555,70 @@ if (typeof google === 'undefined') {
     }
   }
 
+  let lastTestProgressSequence = 0;
+  let progressApiWarningShown = false;
+
+  async function requestTestProgress(url) {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) return null;
+    return response.json();
+  }
+
+  async function pollTestProgress() {
+    let progress = null;
+    try {
+      progress = await requestTestProgress('/__test-progress');
+      if (!progress && window.location.port !== '8081') {
+        progress = await requestTestProgress(`${window.location.protocol}//${window.location.hostname}:8081/__test-progress`);
+      }
+    } catch (error) {
+      if (!progressApiWarningShown) {
+        console.warn('Live test progress is unavailable. Start the suite with npm test to enable it.', error);
+        progressApiWarningShown = true;
+      }
+      return;
+    }
+
+    if (!progress || progress.sequence === lastTestProgressSequence) return;
+    lastTestProgressSequence = progress.sequence;
+
+    const panel = document.getElementById('test-run-status');
+    if (progress.status === 'idle') {
+      panel.hidden = true;
+      return;
+    }
+
+    panel.dataset.state = progress.status;
+    panel.hidden = false;
+    document.getElementById('test-run-label').textContent =
+      progress.status === 'running' ? 'TESTS RUNNING' : `TESTS ${progress.status.toUpperCase()}`;
+    document.getElementById('test-run-name').textContent = progress.test || 'NebulousSearch Cypress suite';
+    document.getElementById('test-run-step').textContent = progress.step;
+
+    if (progress.view && progress.view !== activeTestView) {
+      switchTab(progress.view);
+      activeTestView = progress.view;
+    }
+
+    if (progress.action === 'expand-stats') {
+      document.getElementById('stats-container').style.display = 'block';
+      document.getElementById('expand-icon').classList.add('open');
+    } else if (progress.action === 'purge-start') {
+      document.getElementById('stats-container').style.display = 'block';
+      document.getElementById('expand-icon').classList.add('open');
+      showLoader('purge-overlay', 'Purging anomaly cache...');
+    } else if (progress.action === 'purge-complete') {
+      document.getElementById('total-blocked').textContent = '0';
+      document.querySelectorAll('.b-count').forEach(element => { element.textContent = '0'; });
+      rawQuarantineData = [];
+      document.getElementById('quarantine-list').innerHTML =
+        '<p style="color:#888; text-align:center;">Vault scrubbed. No anomalies found.</p>';
+      hideLoaderSuccess('purge-overlay', 'Purge Complete');
+    }
+  }
+
+  let activeTestView = 'dashboard';
+
   // --- COMMAND CENTER LOGIC ---
   function loadDashboard() {
     showLoader('dashboard-overlay', 'Scanning local airspace...');
@@ -617,7 +642,7 @@ if (typeof google === 'undefined') {
       filterList.innerHTML += `
         <div class="filter-card">
           <div class="filter-info"><h3>${filter.name}</h3><p>${filter.description}</p></div>
-          <div class="filter-toggle"><input type="checkbox" value="${filter.id}" ${filter.isActive ? 'checked' : ''}></div>
+          <div class="filter-toggle"><input type="checkbox" id="filter-${filter.id}" value="${filter.id}" aria-label="Enable ${escapeHTML(filter.name)} filter" ${filter.isActive ? 'checked' : ''}></div>
         </div>`;
       tagBar.innerHTML += `<button class="filter-tag" data-filter="${filter.id}" onclick="setQFilter('${filter.id}')">${filter.name.split(' ')[0]}...</button>`;
     });
@@ -632,8 +657,25 @@ if (typeof google === 'undefined') {
   function toggleStats() {
     const details = document.getElementById('stats-container');
     const icon = document.getElementById('expand-icon');
-    details.style.display = details.style.display === 'none' ? 'block' : 'none';
-    icon.classList.toggle('open');
+    const expanded = details.style.display === 'none';
+    details.style.display = expanded ? 'block' : 'none';
+    details.setAttribute('aria-hidden', String(!expanded));
+    document.querySelector('.stats-header').setAttribute('aria-expanded', String(expanded));
+    icon.classList.toggle('open', expanded);
+  }
+
+  function handleStatsHeaderKeydown(event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleStats();
+    }
+  }
+
+  function handleWhitelistKeydown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addWhitelistItem();
+    }
   }
 
   // --- PURGE LOGIC ---
@@ -671,6 +713,23 @@ if (typeof google === 'undefined') {
     }).getQuarantineData();
   }
 
+  function scanMockInbox() {
+    const button = document.getElementById('scan-mock-inbox-btn');
+    const result = document.getElementById('mock-scan-result');
+    button.disabled = true;
+    result.textContent = 'Scanning mock inbox...';
+    google.script.run.withSuccessHandler(scan => {
+      button.disabled = false;
+      result.textContent = `Scanned ${scan.scannedCount} sample emails; quarantined ${scan.quarantinedCount}.`;
+      google.script.run.withSuccessHandler(renderDashboard).getDashboardData();
+      rawQuarantineData = [];
+      if (document.getElementById('quarantine-view').style.display !== 'none') loadQuarantine();
+    }).withFailureHandler(error => {
+      button.disabled = false;
+      result.textContent = `Mock scan failed: ${error.message || error}`;
+    }).scanMockInbox();
+  }
+
   function setQFilter(filterId) {
     currentQTag = filterId;
     document.querySelectorAll('.filter-tag').forEach(b => b.classList.remove('active'));
@@ -702,7 +761,7 @@ if (typeof google === 'undefined') {
             <div class="q-sender">${escapeHTML(item.sender)} • ${item.date}</div>
             <span class="tag">${item.filterName}</span>
           </div>
-          <button class="view-btn" onclick="openEmailModal(${globalIndex})">Inspect</button>
+          <button class="view-btn" onclick="openEmailModal(${globalIndex}, this)">Inspect</button>
         </div>`;
     });
   }
@@ -735,7 +794,7 @@ if (typeof google === 'undefined') {
     const container = document.getElementById('whitelist-tags');
     container.innerHTML = '';
     currentWhitelist.forEach((email, index) => {
-      container.innerHTML += `<div class="w-tag">${escapeHTML(email)}<span class="w-tag-close" onclick="removeWhitelistItem(${index})">&times;</span></div>`;
+      container.innerHTML += `<div class="w-tag" role="listitem">${escapeHTML(email)}<button type="button" class="w-tag-close" aria-label="Remove ${escapeHTML(email)} from trusted senders" onclick="removeWhitelistItem(${index})">&times;</button></div>`;
     });
   }
   function addWhitelistItem() {
@@ -754,17 +813,20 @@ if (typeof google === 'undefined') {
     const activeIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
     google.script.run.withSuccessHandler(res => {
       btn.disabled = false; btn.textContent = 'Initialize Filters';
+      document.getElementById('mock-scan-result').textContent = res.message;
     }).saveFilterSettings(activeIds, currentWhitelist);
   });
 
   // --- SAFE MODALS LOGIC ---
-  function openEmailModal(index) {
+  function openEmailModal(index, trigger) {
     const item = rawQuarantineData[index];
     document.getElementById('modal-subject').textContent = item.subject;
     document.getElementById('modal-sender').textContent = item.sender;
     document.getElementById('modal-filter').textContent = item.filterName;
     document.getElementById('modal-body').textContent = item.body; 
+    modalTrigger = trigger || document.activeElement;
     document.getElementById('email-modal').style.display = 'flex';
+    document.querySelector('#email-modal .close-btn').focus();
   }
   function openNewsModal(index) {
     const article = rawNewsData[index];
@@ -772,9 +834,22 @@ if (typeof google === 'undefined') {
     document.getElementById('n-title').textContent = article.title;
     document.getElementById('n-date').textContent = article.date;
     document.getElementById('n-body').textContent = article.content;
+    modalTrigger = document.activeElement;
     document.getElementById('news-modal').style.display = 'flex';
+    document.querySelector('#news-modal .close-btn').focus();
   }
-  function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+  function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+    if (modalTrigger?.isConnected) modalTrigger.focus();
+    modalTrigger = null;
+  }
+
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    const openModal = Array.from(document.querySelectorAll('.modal'))
+      .find(modal => modal.style.display === 'flex');
+    if (openModal) closeModal(openModal.id);
+  });
   function escapeHTML(str) { return str ? str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag])) : ''; }
 </script>
 
