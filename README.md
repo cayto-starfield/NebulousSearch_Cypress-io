@@ -1,6 +1,6 @@
 # NebulousSearch: Cypress Frontend Automation Test Harness
 
-Hello and welcome to the NebulousSearch project! My name is Cayto Nova, 32yr old Sr. Technical QA Analyst with over 10 years of experience, and also the creator of this project. You can learn more about my professional profile at (https://caytonova.work). NebulousSearch is a small, browser-based test email-threat dashboard paired with a Cypress end-to-end testing suite. It is designed as a practical portfolio example of UI automation, quality assurance, basic cybersecurity concepts, and accessibility development.
+Hello and welcome to the NebulousSearch project! My name is Cayto Nova, 32yr old Sr. Technical QA Analyst with over 10 years of experience, and also the creator of this project. You can learn more about my professional profile at (https://www.caytonova.work). NebulousSearch is a small, browser-based test email-threat dashboard paired with a Cypress end-to-end testing suite. It is designed as a practical portfolio example of UI automation, quality assurance, basic cybersecurity concepts, and accessibility development.
 
 The application presents a Command Center, Quarantine Vault, and Threat Intel page. Its local backend supplies sample messages and deterministic rule-based matching so that tests can verify real UI state changes without connecting to an email account or external service.
 
