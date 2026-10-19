@@ -99,7 +99,7 @@ describe('Mock filter rules', () => {
 
   // Verifies scanning is repeatable without duplicating quarantined messages, and that clearing
   // analytics/quarantine state makes the same fixture eligible for a fresh scan.
-  it('scans each sample idempotently and allows scanning again after a purge', () => {
+  it('scans each sample  and allows scanning again after a purge', () => {
     const service = createService();
     service.saveFilterSettings(service.filters.map(filter => filter.id), ['trusted@example.com']);
 
@@ -327,6 +327,27 @@ describe('NebulousSearch UI Framework & Accessibility', () => {
       .type(' ')
       .should('have.attr', 'aria-expanded', 'true');
     cy.get('#stats-container').should('have.attr', 'aria-hidden', 'false');
+  });
+
+  createService().filters.forEach(filter => {
+    it(`toggles the ${filter.name} filter on and off`, () => {
+      const selector = `#filter-${filter.id}`;
+      let uncheckedBackground;
+
+      reportTestProgress({ step: `Enabling the ${filter.name} filter`, view: 'dashboard' });
+      cy.get(selector).should('not.be.checked').then($toggle => {
+        uncheckedBackground = getComputedStyle($toggle[0]).backgroundColor;
+      });
+
+      cy.get(selector).click().should('be.checked').should($toggle => {
+        expect(getComputedStyle($toggle[0]).backgroundColor).not.to.equal(uncheckedBackground);
+      });
+
+      reportTestProgress({ step: `Disabling the ${filter.name} filter`, view: 'dashboard' });
+      cy.get(selector).click().should('not.be.checked').should($toggle => {
+        expect(getComputedStyle($toggle[0]).backgroundColor).to.equal(uncheckedBackground);
+      });
+    });
   });
 
   // Checks the page has no horizontal overflow at a 320px viewport before and after navigating

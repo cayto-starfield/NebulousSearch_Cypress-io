@@ -74,3 +74,39 @@ The Cypress automation suite continuously validates structural and functional re
 ### ATC-UI-03: Navigates Command Center Tabs & Modals
 * **Mechanism:** Automates clicking between 'Quarantine Vault' and 'Threat Intel' tabs.
 * **Validation:** Asserts that the respective `#quarantine-view` and `#intel-view` containers display properly while hiding inactive tabs.
+
+### ATC-UI-04: Toggles the Asteroid Belt Filter
+* **Mechanism:** Clicks the Asteroid Belt filter toggle to enable it and then disable it.
+* **Validation:** Confirms the checkbox changes to checked and back to unchecked, and that the toggle's enabled visual styling appears and returns to its original disabled styling.
+
+### ATC-UI-05: Toggles the Dark Matter Filter
+* **Mechanism:** Clicks the Dark Matter filter toggle to enable it and then disable it.
+* **Validation:** Confirms the checkbox changes to checked and back to unchecked, and that the toggle's enabled visual styling appears and returns to its original disabled styling.
+
+### ATC-UI-06: Toggles the False Gravity Filter
+* **Mechanism:** Clicks the False Gravity filter toggle to enable it and then disable it.
+* **Validation:** Confirms the checkbox changes to checked and back to unchecked, and that the toggle's enabled visual styling appears and returns to its original disabled styling.
+
+### ATC-UI-07: Toggles the Solar Flare Filter
+* **Mechanism:** Clicks the Solar Flare filter toggle to enable it and then disable it.
+* **Validation:** Confirms the checkbox changes to checked and back to unchecked, and that the toggle's enabled visual styling appears and returns to its original disabled styling.
+
+### ATC-UI-08: Toggles the Crypto & Wallet Phishing Filter
+* **Mechanism:** Clicks the Crypto & Wallet Phishing filter toggle to enable it and then disable it.
+* **Validation:** Confirms the checkbox changes to checked and back to unchecked, and that the toggle's enabled visual styling appears and returns to its original disabled styling.
+
+### ATC-UI-09: Toggles the False Payload Filter
+* **Mechanism:** Clicks the False Payload filter toggle to enable it and then disable it.
+* **Validation:** Confirms the checkbox changes to checked and back to unchecked, and that the toggle's enabled visual styling appears and returns to its original disabled styling.
+
+### ATC-UI-10: Toggles the Meteor Shower Filter
+* **Mechanism:** Clicks the Meteor Shower filter toggle to enable it and then disable it.
+* **Validation:** Confirms the checkbox changes to checked and back to unchecked, and that the toggle's enabled visual styling appears and returns to its original disabled styling.
+
+### ATC-UI-11: Toggles the Cosmic Vacuum Filter
+* **Mechanism:** Clicks the Cosmic Vacuum filter toggle to enable it and then disable it.
+* **Validation:** Confirms the checkbox changes to checked and back to unchecked, and that the toggle's enabled visual styling appears and returns to its original disabled styling.
+
+### ATC-UI-12: Toggles the Rogue Satellite Filter
+* **Mechanism:** Clicks the Rogue Satellite filter toggle to enable it and then disable it.
+* **Validation:** Confirms the checkbox changes to checked and back to unchecked, and that the toggle's enabled visual styling appears and returns to its original disabled styling.

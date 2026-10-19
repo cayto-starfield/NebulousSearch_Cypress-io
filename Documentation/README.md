@@ -38,6 +38,7 @@ This is a demonstration and test harness, not a deployed mail security product. 
 - **Threat Intel:** Explains all nine deterministic test rules with their matching signals and representative examples.
 - **Cyber News:** Displays local article fixtures and opens an article detail dialog.
 - **Sample inbox scan:** Applies saved test filter settings to 11 deterministic messages, skips whitelisted senders, and reports the result in the UI.
+- **Filter toggle coverage:** Gives each registered filter a separate browser test that verifies its enabled and disabled checkbox and visual states.
 - **Visible test progress:** The local progress endpoint lets the browser app display the active test and its current step.
 
 ## Requirements
