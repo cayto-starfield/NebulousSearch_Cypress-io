@@ -660,3 +660,64 @@ describe('NebulousSearch UI Framework', () => {
   });
 
 });
+// This file is a comprehensive Cypress end-to-end suite for the NebulousSearch app. It tests both the backend mock filtering logic and the UI behavior/accessibility of the dashboard, Quarantine Vault, Threat Intel, and news/article interactions.
+// High-level summary:
+// - It imports mock backend logic from ../../scripts/mock-backend and uses it to create test data and validate rules.
+// - It tracks test progress via a POST to /__test-progress so the app can show live status updates during the suite.
+// - It verifies the seeded quarantine dataset:
+// - exactly one representative email per registered filter
+// - each email matches its expected filter predicate
+// - filter heuristics behave as intended for both positive and negative examples
+// - It checks mock inbox scanning behavior:
+// - scan counts
+// - quarantine counts
+// - repeat scanning without duplication
+// - clearing stats and rescanning
+// - It tests the UI shell and accessibility:
+// - document language/title/landmarks
+// - single h1
+// - navigation and aria attributes
+// - button/input accessible names
+// - image alt text
+// - video captions
+// - axe scans with wcag2a, wcag2aa, and section508 rules
+// - It exercises keyboard navigation and focus management:
+// - tabs
+// - filter chips
+// - search
+// - checkboxes
+// - stats expander
+// - modal open/close behavior
+// - focus return after Escape
+// - It validates Quarantine Vault functionality:
+// - opening vault
+// - search by sender/subject
+// - empty state
+// - item count changes
+// - modal content for each quarantined email
+// - It tests cyber news cards and article modals:
+// - card rendering
+// - article details in modal
+// - keyboard activation
+// - It validates whitelist behavior:
+// - adding trusted senders
+// - tag creation
+// - save flow
+// - scanning with enabled filters and whitelist exclusions
+// - It includes security/XSS guard tests:
+// - markup entered into whitelist and search inputs is rendered as inert text
+// - no SVG or event handler execution
+// - It includes responsive/layout assertions:
+// - narrow viewport
+// - text spacing overrides
+// - no horizontal overflow
+// - It also checks loading overlays/spinners and purge analytics workflow.
+
+// In short, this is a full QA regression suite covering:
+// - mock rule logic
+// - UI interactions
+// - accessibility compliance
+// - keyboard support
+// - security hardening
+// - dynamic content behavior
+// - end-to-end flows for the dashboard and vault
